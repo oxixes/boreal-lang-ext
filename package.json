@@ -2,7 +2,7 @@
   "name": "boreal-lang",
   "displayName": "Boreal Lang",
   "description": "Adds syntax highlighting support for UPM's ETSIINF's Boreal language used in the \"Traductores de Lenguajes\" subject.",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "publisher": "oxixes",
   "repository": {
     "type": "git",
@@ -19,7 +19,11 @@
       "id": "boreal",
       "aliases": ["Boreal", "boreal"],
       "extensions": [".boreal",".bor"],
-      "configuration": "./language-configuration.json"
+      "configuration": "./language-configuration.json",
+      "icon": {
+        "dark": "./assets/language-icon.png",
+        "light": "./assets/language-icon.png"
+      }
     }],
     "grammars": [{
       "language": "boreal",
