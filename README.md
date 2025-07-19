@@ -16,6 +16,10 @@ The extension currently only supports syntax highlighting, but future updates ma
 
 ## Release Notes
 
+### 0.0.2
+
+Added language icon for the Boreal language extension.
+
 ### 0.0.1
 
 Initial release of the Boreal Language Extension for Visual Studio Code.
