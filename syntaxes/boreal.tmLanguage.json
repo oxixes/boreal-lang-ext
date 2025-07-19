@@ -1,0 +1,751 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "Boreal",
+	"patterns": [
+		{
+			"include": "#comments"
+		},
+		{
+			"include": "#declarationBlock"
+		},
+		{
+			"include": "#program"
+		},
+		{
+			"include": "#procedure"
+		},
+		{
+			"include": "#function"
+		},
+		{
+			"include": "#keywords"
+		}
+	],
+	"repository": {
+		"comments": {
+			"patterns": [
+				{
+					"name": "comment.block.boreal",
+					"begin": "\\{",
+					"end": "\\}",
+					"patterns": [
+						{
+							"name": "comment.block.content.boreal",
+							"match": "[^\\}]+"
+						}
+					]
+				}
+			]
+		},
+		"keywords": {
+			"patterns": [
+				{
+					"match": "(?i)\\bbegin\\b",
+					"name": "keyword.control.begin.boreal"
+				},
+				{
+					"match": "(?i)\\bend\\b",
+					"name": "keyword.control.end.boreal"
+				},
+				{
+					"match": "(?i)\\bprogram\\b",
+					"name": "keyword.control.program.boreal"
+				},
+				{
+					"match": "(?i)\\bprocedure\\b",
+					"name": "keyword.control.procedure.boreal"
+				},
+				{
+					"match": "(?i)\\bfunction\\b",
+					"name": "keyword.control.function.boreal"
+				},
+				{
+					"match": "(?i)\\breturn\\b",
+					"name": "keyword.control.return.boreal"
+				}
+			]
+		},
+		"program": {
+			"begin": "(?i)^\\s*(program)\\b",
+			"beginCaptures": {
+				"1": {
+					"name": "keyword.control.program.boreal"
+				}
+			},
+			"while": "^(?!\\s*(?i)(function|procedure|program)\\b)",
+			"patterns": [
+				{
+					"include": "#comments"
+				},
+				{
+					"include": "#declarationBlock"
+				},
+				{
+					"include": "#beginEndBlock"
+				},
+				{
+					"include": "#keywords"
+				},
+				{
+					"include": "#programDeclaration"
+				}
+			],
+			"name": "meta.program.boreal"
+		},
+		"programDeclaration": {
+			"begin": "\\b([a-zA-Z_][a-zA-Z0-9_]*)\\b",
+			"beginCaptures": {
+				"1": {
+					"name": "entity.name.function.boreal"
+				}
+			},
+			"end": ";",
+			"patterns": [
+				{
+					"include": "#comments"
+				}
+			]
+		},
+		"procedure": {
+			"begin": "(?i)^\\s*(procedure)\\b",
+			"beginCaptures": {
+				"1": {
+					"name": "keyword.control.procedure.boreal"
+				}
+			},
+			"while": "^(?!\\s*(?i)(function|procedure|program)\\b)",
+			"patterns": [
+				{
+					"include": "#comments"
+				},
+				{
+					"include": "#declarationBlock"
+				},
+				{
+					"include": "#beginEndBlock"
+				},
+				{
+					"include": "#keywords"
+				},
+				{
+					"include": "#procedureDeclaration"
+				}
+			],
+			"name": "meta.procedure.boreal"
+		},
+		"procedureDeclaration": {
+			"begin": "\\b([a-zA-Z_][a-zA-Z0-9_]*)\\b",
+			"beginCaptures": {
+				"1": {
+					"name": "entity.name.function.boreal"
+				}
+			},
+			"end": ";",
+			"patterns": [
+				{
+					"include": "#comments"
+				},
+				{
+					"include": "#parameterList"
+				}
+			],
+			"name": "meta.procedure.declaration.boreal"
+		},
+		"function": {
+			"begin": "(?i)^\\s*(function)\\b",
+			"beginCaptures": {
+				"1": {
+					"name": "keyword.control.function.boreal"
+				}
+			},
+			"while": "^(?!\\s*(?i)(function|procedure|program)\\b)",
+			"patterns": [
+				{
+					"include": "#comments"
+				},
+				{
+					"include": "#declarationBlock"
+				},
+				{
+					"include": "#beginEndBlock"
+				},
+				{
+					"include": "#keywords"
+				},
+				{
+					"include": "#functionDeclaration"
+				}
+			],
+			"name": "meta.function.boreal"
+		},
+		"functionDeclaration": {
+			"begin": "\\b([a-zA-Z_][a-zA-Z0-9_]*)\\b",
+			"beginCaptures": {
+				"1": {
+					"name": "entity.name.function.boreal"
+				}
+			},
+			"end": ";",
+			"patterns": [
+				{
+					"include": "#comments"
+				},
+				{
+					"include": "#parameterList"
+				},
+				{
+					"include": "#returnType"
+				}
+			],
+			"name": "meta.procedure.declaration.boreal"
+		},
+		"parameterList": {
+			"patterns": [
+				{
+					"begin": "\\(",
+					"end": "\\)",
+					"patterns": [
+						{
+							"include": "#comments"
+						},
+						{
+							"include": "#parameter"
+						},
+						{
+							"match": ";",
+							"name": "punctuation.separator.parameter.boreal"
+						}
+					]
+				}
+			]
+		},
+		"parameter": {
+			"patterns": [
+				{
+					"begin": "(?i)(?=\\s*(?:var\\b)?\\s*[a-zA-Z_])",
+					"end": "(?=\\s*[;)])",
+					"patterns": [
+						{
+							"include": "#comments"
+						},
+						{
+							"match": "(?i)(\\bvar\\b)",
+							"name": "storage.modifier.reference.boreal"
+						},
+						{
+							"match": "(?i)(integer|boolean|string)",
+							"name": "storage.type.primitive.boreal"
+						},
+						{
+							"match": "([a-zA-Z_][a-zA-Z0-9_]*)",
+							"name": "variable.parameter.name.boreal"
+						},
+						{
+							"match": ":",
+							"name": "punctuation.separator.type.boreal"
+						}
+					]
+				}
+			]
+		},
+		"returnType": {
+			"patterns": [
+				{
+					"begin": ":",
+					"beginCaptures": {
+						"0": {
+							"name": "punctuation.separator.return-type.boreal"
+						}
+					},
+					"end": "(?=[;])",
+					"patterns": [
+						{
+							"include": "#comments"
+						},
+						{
+							"match": "(?i)\\b(integer|boolean|string)\\b",
+							"name": "storage.type.primitive.boreal"
+						}
+					]
+				}
+			]
+		},
+		"declarations": {
+			"begin": "\\b([a-zA-Z_][a-zA-Z0-9_]*)\\b\\s*",
+			"beginCaptures": {
+				"1": {
+					"name": "variable.other.declaration.boreal"
+				}
+			},
+			"end": ";(?=\\s*(\\b(function|procedure|program|begin|var)\\b|\\Z))",
+			"patterns": [
+				{
+					"include": "#comments"
+				},
+				{
+					"match": "\\s*:\\s*",
+					"name": "punctuation.separator.colon.boreal"
+				},
+				{
+					"match": "(?i)\\b(integer|boolean|string)\\b",
+					"name": "storage.type.primitive.boreal"
+				}
+			],
+			"name": "meta.variable.declaration.boreal"
+		},
+		"declarationBlock": {
+			"begin": "(?i)\\bvar\\b",
+			"beginCaptures": {
+				"0": {
+					"name": "storage.modifier.var.boreal"
+				}
+			},
+			"while": "^(?!\\s*(?i)(function|procedure|program|begin|var)\\b)",
+			"patterns": [
+				{
+					"include": "#comments"
+				},
+				{
+					"include": "#declarations"
+				}
+			],
+			"name": "meta.declaration.block.boreal"
+		},
+		"beginEndBlock": {
+			"begin": "(?i)(\\bbegin\\b)",
+			"beginCaptures": {
+				"1": {
+					"name": "keyword.control.begin.boreal"
+				}
+			},
+			"end": "(?i)(^\\s*|\\b)(end)\\s*(;)?",
+			"endCaptures": {
+				"2": {
+					"name": "keyword.control.end.boreal"
+				}
+			},
+			"patterns": [
+				{
+					"include": "#comments"
+				},
+				{
+					"include": "#ifStatements"
+				},
+				{
+					"include": "#forStatements"
+				},
+				{
+					"include": "#repeatUntilStatements"
+				},
+				{
+					"include": "#whileStatements"
+				},
+				{
+					"include": "#exitWhenStatements"
+				},
+				{
+					"include": "#beginEndBlock"
+				},
+				{
+					"include": "#loopBlock"
+				},
+				{
+					"include": "#caseBlock"
+				},
+				{
+					"include": "#expressions"
+				}
+			]
+		},
+		"expressions": {
+			"patterns": [
+				{
+					"include": "#comments"
+				},
+				{
+					"include": "#keywords"
+				},
+				{
+					"include": "#constants"
+				},
+				{
+					"include": "#operators"
+				},
+				{
+					"include": "#builtinFunctions"
+				},
+				{
+					"include": "#functionCall"
+				},
+				{
+					"include": "#parenthesizedExpression"
+				},
+				{
+					"include": "#variables"
+				}
+			]
+		},
+		"constants": {
+			"patterns": [
+				{
+					"match": "(?i)\\b(true|false)\\b",
+					"name": "constant.language.boolean.boreal"
+				},
+				{
+					"begin": "'",
+					"end": "'",
+					"name": "string.quoted.single.boreal",
+					"patterns": [
+						{
+							"match": "\\\\.",
+							"name": "constant.character.escape.boreal"
+						}
+					]
+				},
+				{
+					"match": "\\b\\d+\\b",
+					"name": "constant.numeric.integer.boreal"
+				}
+			]
+		},
+		"operators": {
+			"patterns": [
+				{
+					"match": "\\*\\*",
+					"name": "keyword.operator.arithmetic.boreal"
+				},
+				{
+					"match": "\\+|\\-|\\*|\\/|(?i)\\bmod\\b",
+					"name": "keyword.operator.arithmetic.boreal"
+				},
+				{
+					"match": ":=",
+					"name": "keyword.operator.assignment.boreal"
+				},
+				{
+					"match": "=|<>|<=|>=|<|>",
+					"name": "keyword.operator.comparison.boreal"
+				},
+				{
+					"match": "(?i)\\b(and|or|xor|not)\\b",
+					"name": "keyword.operator.logical.boreal"
+				},
+				{
+					"match": "(?i)\\bin\\b",
+					"name": "keyword.operator.membership.boreal"
+				}
+			]
+		},
+		"builtinFunctions": {
+			"patterns": [
+				{
+					"match": "(?i)\\b(min|max|read|write|writeln)(?=(?:\\s*\\{[^}]*\\})*\\s*\\()",
+					"name": "support.function.builtin.boreal"
+				}
+			]
+		},
+		"functionCall": {
+			"begin": "(?i)(?!\\b(?:begin|end|program|procedure|function|var|integer|boolean|string|true|false|and|or|xor|not|mod|in)\\b)\\b([a-zA-Z_][a-zA-Z0-9_]*)(?=(?:\\s*\\{[^}]*\\})*\\s*\\()",
+			"beginCaptures": {
+				"1": {
+					"name": "entity.name.function.call.boreal"
+				}
+			},
+			"end": "\\)",
+			"endCaptures": {
+				"0": {
+					"name": "punctuation.section.arguments.end.boreal"
+				}
+			},
+			"patterns": [
+				{
+					"match": "\\(",
+					"name": "punctuation.section.arguments.begin.boreal"
+				},
+				{
+					"include": "#expressions"
+				},
+				{
+					"match": ",",
+					"name": "punctuation.separator.arguments.boreal"
+				}
+			]
+		},
+		"parenthesizedExpression": {
+			"begin": "\\(",
+			"end": "\\)",
+			"beginCaptures": {
+				"0": {
+					"name": "punctuation.section.group.begin.boreal"
+				}
+			},
+			"endCaptures": {
+				"0": {
+					"name": "punctuation.section.group.end.boreal"
+				}
+			},
+			"patterns": [
+				{
+					"include": "#expressions"
+				}
+			]
+		},
+		"variables": {
+			"match": "\\b[a-zA-Z_][a-zA-Z0-9_]*\\b",
+			"name": "variable.other.boreal"
+		},
+		"ifStatements": {
+			"patterns": [
+				{
+					"begin": "(?i)((\\bif\\b)|(\\belse\\b))",
+					"beginCaptures": {
+						"0": {
+							"name": "keyword.control.if.boreal"
+						}
+					},
+					"end": "(?i);|(?=\\bend\\b)|(?=\\Z)",
+					"patterns": [
+						{
+							"include": "#comments"
+						},
+						{
+							"match": "(?i)\\bthen\\b",
+							"name": "keyword.control.then.boreal"
+						},
+						{
+							"match": "(?i)\\belse\\b",
+							"name": "keyword.control.else.boreal"
+						},
+						{
+							"include": "#beginEndBlock"
+						},
+						{
+							"include": "#loopBlock"
+						},
+						{
+					"include": "#caseBlock"
+				},
+						{
+							"include": "#expressions"
+						}
+					]
+				}
+			]
+		},
+		"forStatements": {
+			"patterns": [
+				{
+					"begin": "(?i)((\\bfor\\b)|(\\bto\\b)|(\\bdo\\b))",
+					"beginCaptures": {
+						"0": {
+							"name": "keyword.control.for.boreal"
+						}
+					},
+					"end": "(?i);|(?=\\bend\\b)|(?=\\Z)",
+					"patterns": [
+						{
+							"include": "#comments"
+						},
+						{
+							"match": "(?i)\\bto\\b",
+							"name": "keyword.control.to.boreal"
+						},
+						{
+							"match": "(?i)\\bdo\\b",
+							"name": "keyword.control.do.boreal"
+						},
+						{
+							"include": "#beginEndBlock"
+						},
+						{
+							"include": "#loopBlock"
+						},
+						{
+					"include": "#caseBlock"
+				},
+						{
+							"include": "#expressions"
+						}
+					]
+				}
+			]
+		},
+		"repeatUntilStatements": {
+			"patterns": [
+				{
+					"begin": "(?i)((\\brepeat\\b)|(\\buntil\\b))",
+					"beginCaptures": {
+						"0": {
+							"name": "keyword.control.repeat.boreal"
+						}
+					},
+					"end": "(?i);|(?=\\Z)",
+					"patterns": [
+						{
+							"include": "#comments"
+						},
+						{
+							"match": "(?i)\\buntil\\b",
+							"name": "keyword.control.until.boreal"
+						},
+						{
+							"include": "#beginEndBlock"
+						},
+						{
+							"include": "#loopBlock"
+						},
+						{
+					"include": "#caseBlock"
+				},
+						{
+							"include": "#expressions"
+						}
+					]
+				}
+			]
+		},
+		"whileStatements": {
+			"patterns": [
+				{
+					"begin": "(?i)((\\bwhile\\b)|(\\bdo\\b))",
+					"beginCaptures": {
+						"0": {
+							"name": "keyword.control.while.boreal"
+						}
+					},
+					"end": "(?i);|(?=\\bend\\b)|(?=\\Z)",
+					"patterns": [
+						{
+							"include": "#comments"
+						},
+						{
+							"match": "(?i)\\bdo\\b",
+							"name": "keyword.control.do.boreal"
+						},
+						{
+							"include": "#beginEndBlock"
+						},
+						{
+							"include": "#loopBlock"
+						},
+						{
+					"include": "#caseBlock"
+				},
+						{
+							"include": "#expressions"
+						}
+					]
+				}
+			]
+		},
+		"exitWhenStatements": {
+			"patterns": [
+				{
+					"begin": "(?i)\\bexit\\b",
+					"beginCaptures": {
+						"0": {
+							"name": "keyword.control.exit.boreal"
+						}
+					},
+					"end": ";",
+					"patterns": [
+						{
+							"include": "#comments"
+						},
+						{
+							"match": "(?i)\\bwhen\\b",
+							"name": "keyword.control.when.boreal"
+						},
+						{
+							"include": "#expressions"
+						}
+					]
+				}
+			]
+		},
+		"loopBlock": {
+			"begin": "(?i)(\\bloop\\b)",
+			"beginCaptures": {
+				"1": {
+					"name": "keyword.control.loop.boreal"
+				}
+			},
+			"end": "(?i)(^\\s*|\\b)(end)\\s*(;)?",
+			"endCaptures": {
+				"2": {
+					"name": "keyword.control.end.boreal"
+				}
+			},
+			"patterns": [
+				{
+					"include": "#comments"
+				},
+				{
+					"include": "#ifStatements"
+				},
+				{
+					"include": "#forStatements"
+				},
+				{
+					"include": "#repeatUntilStatements"
+				},
+				{
+					"include": "#whileStatements"
+				},
+				{
+					"include": "#exitWhenStatements"
+				},
+				{
+					"include": "#beginEndBlock"
+				},
+				{
+					"include": "#loopBlock"
+				},
+				{
+					"include": "#caseBlock"
+				},
+				{
+					"include": "#expressions"
+				}
+			]
+		},
+		"caseBlock": {
+			"begin": "(?i)\\bcase\\b",
+			"beginCaptures": {
+				"0": {
+					"name": "keyword.control.case.boreal"
+				}
+			},
+			"end": "(?i)(^\\s*|\\b)(end)\\s*(;)?",
+			"endCaptures": {
+				"2": {
+					"name": "keyword.control.end.boreal"
+				}
+			},
+			"patterns": [
+				{
+					"include": "#comments"
+				},
+				{
+					"match": "(?i)\\bof\\b",
+					"name": "keyword.control.of.boreal"
+				},
+				{
+					"match": "(?i)\\botherwise\\b",
+					"name": "keyword.control.otherwise.boreal"
+				},
+				{
+					"match": ":",
+					"name": "punctuation.separator.case.boreal"
+				},
+				{
+					"include": "#beginEndBlock"
+				},
+				{
+					"include": "#expressions"
+				}
+			]
+		}
+	},
+	"scopeName": "source.boreal"
+}
