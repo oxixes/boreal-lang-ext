@@ -1,0 +1,11 @@
+{
+  "Begin End Block": {
+    "prefix": "begin",
+    "body": [
+      "begin",
+      "\t$0",
+      "end;"
+    ],
+    "description": "Insert a begin-end block"
+  }
+}

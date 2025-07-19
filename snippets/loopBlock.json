@@ -1,0 +1,11 @@
+{
+  "Loop Block": {
+    "prefix": "loop",
+    "body": [
+      "loop",
+      "\t$0",
+      "end;"
+    ],
+    "description": "Insert a loop block"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "Function": {
+    "prefix": "function",
+    "body": [
+      "function $1($2): $3;",
+      "begin",
+      "\t$0",
+      "end;"
+    ],
+    "description": "Insert a function"
+  }
+}

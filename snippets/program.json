@@ -1,0 +1,12 @@
+{
+  "Program": {
+    "prefix": "program",
+    "body": [
+      "program $1;",
+      "begin",
+      "\t$0",
+      "end;"
+    ],
+    "description": "Insert a program"
+  }
+}

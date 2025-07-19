@@ -1,0 +1,12 @@
+{
+  "While Loop": {
+    "prefix": "while",
+    "body": [
+      "while $1 do",
+      "begin",
+      "\t$0",
+      "end;"
+    ],
+    "description": "Insert a while loop"
+  }
+}

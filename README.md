@@ -16,6 +16,10 @@ The extension currently only supports syntax highlighting, but future updates ma
 
 ## Release Notes
 
+### 0.0.3
+
+Adds snippets and better language configuration for the Boreal language extension.
+
 ### 0.0.2
 
 Added language icon for the Boreal language extension.

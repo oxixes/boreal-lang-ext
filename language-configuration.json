@@ -11,13 +11,17 @@
     "autoClosingPairs": [
         ["{", "}"],
         ["(", ")"],
-        ["'", "'"],
-        ["begin", "end;"]
+        ["'", "'"]
     ],
     // symbols that can be used to surround a selection
     "surroundingPairs": [
         ["{", "}"],
         ["(", ")"],
         ["'", "'"]
-    ]
+    ],
+    "wordPattern": "([^\\`\\~\\!\\@\\#\\%\\^\\&\\*\\(\\)\\-\\=\\+\\[\\{\\]\\}\\\\\\|\\;\\:\\'\\\"\\,\\.\\<\\>\\/\\?\\s]+)",
+    "indentationRules": {
+        "increaseIndentPattern": "^(?:(?!\\{.*?\\}).)*\\b(?:begin|loop|of)\\s*$",
+        "decreaseIndentPattern": "^(?:(?!\\{.*?\\}).)*\\b(?:end)\\s*$"
+    }
 }

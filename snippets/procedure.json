@@ -1,0 +1,12 @@
+{
+  "Procedure": {
+    "prefix": "procedure",
+    "body": [
+      "procedure $1($2);",
+      "begin",
+      "\t$0",
+      "end;"
+    ],
+    "description": "Insert a procedure"
+  }
+}

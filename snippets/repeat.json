@@ -1,0 +1,11 @@
+{
+  "Repeat Loop": {
+    "prefix": "repeat",
+    "body": [
+      "repeat",
+      "\t$0",
+      "until $1;"
+    ],
+    "description": "Insert a repeat loop"
+  }
+}

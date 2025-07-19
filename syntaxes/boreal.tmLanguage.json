@@ -523,8 +523,8 @@
 							"include": "#loopBlock"
 						},
 						{
-					"include": "#caseBlock"
-				},
+							"include": "#caseBlock"
+						},
 						{
 							"include": "#expressions"
 						}
@@ -561,8 +561,8 @@
 							"include": "#loopBlock"
 						},
 						{
-					"include": "#caseBlock"
-				},
+							"include": "#caseBlock"
+						},
 						{
 							"include": "#expressions"
 						}
@@ -589,14 +589,29 @@
 							"name": "keyword.control.until.boreal"
 						},
 						{
+							"include": "#ifStatements"
+						},
+						{
+							"include": "#forStatements"
+						},
+						{
+							"include": "#repeatUntilStatements"
+						},
+						{
+							"include": "#whileStatements"
+						},
+						{
+							"include": "#exitWhenStatements"
+						},
+						{
 							"include": "#beginEndBlock"
 						},
 						{
 							"include": "#loopBlock"
 						},
 						{
-					"include": "#caseBlock"
-				},
+							"include": "#caseBlock"
+						},
 						{
 							"include": "#expressions"
 						}
@@ -629,8 +644,8 @@
 							"include": "#loopBlock"
 						},
 						{
-					"include": "#caseBlock"
-				},
+							"include": "#caseBlock"
+						},
 						{
 							"include": "#expressions"
 						}

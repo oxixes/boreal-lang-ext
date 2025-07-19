@@ -1,0 +1,12 @@
+{
+  "For Loop": {
+    "prefix": "for",
+    "body": [
+      "for $1 to $2 do",
+      "begin",
+      "\t$0",
+      "end;"
+    ],
+    "description": "Insert a for loop"
+  }
+}

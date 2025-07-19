@@ -1,0 +1,11 @@
+{
+  "Case Block": {
+    "prefix": "case",
+    "body": [
+      "case $1 of",
+      "\t$0",
+      "end;"
+    ],
+    "description": "Insert a case block"
+  }
+}
