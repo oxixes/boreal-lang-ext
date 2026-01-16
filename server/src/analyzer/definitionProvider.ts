@@ -1,7 +1,6 @@
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { Location, Position, Range } from 'vscode-languageserver/node';
 import { IntegratedAnalyzer } from './analyzer';
-import { Symbol as BorealSymbol, Scope } from '../types/symbol';
 
 /**
  * Provides "Go to Definition" functionality for Boreal language

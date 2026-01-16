@@ -1,6 +1,6 @@
 import { Attributes } from './parser';
 import { SymbolTable } from './symbolTable';
-import { SymbolKind, DataType, SemanticError, Parameter } from '../types/symbol';
+import { SymbolKind, DataType, SemanticError, Parameter, SemanticToken } from '../types/symbol';
 import { Lexer } from './lexer';
 
 /**
@@ -20,6 +20,9 @@ export class SemanticActions {
     // Error tracking
     public errors: SemanticError[] = [];
     public warnings: SemanticError[] = [];
+
+    // Semantic tokens for highlighting
+    private semanticTokens: SemanticToken[] = [];
 
     constructor(symbolTable: SymbolTable, lexer: Lexer) {
         this.symbolTable = symbolTable;
@@ -50,6 +53,21 @@ export class SemanticActions {
         });
     }
 
+    /**
+     * Update semantic token at given position
+     */
+    private addSemanticToken(line: number, column: number, length: number, tokenType: 'variable' | 'function', modifiers?: string[]): void {
+        const token: SemanticToken = {
+            line: line - 1,
+            column: column,
+            length: length,
+            tokenType: tokenType,
+            tokenModifiers: modifiers || []
+        }
+
+        this.semanticTokens.push(token);
+    }
+
     private addErrorFromAttr(message: string, attr: Attributes): void {
         this.addError(message, attr.position || 0, attr.line || 0, attr.column || 0, attr.llength || 0);
     }
@@ -65,7 +83,7 @@ export class SemanticActions {
         }
     }
 
-    public executeAction(ruleNumber: number, semanticStack: Attributes[], ruleLength: number): Attributes {
+    public executeAction(ruleNumber: number, semanticStack: Attributes[]): Attributes {
         switch (ruleNumber) {
             case 1: return this.acc1(semanticStack);
             case 2: return this.acc2();
@@ -252,6 +270,11 @@ export class SemanticActions {
             pidAtb.symbol.kind = SymbolKind.PROGRAM; // Using PROGRAM/PROCEDURE
             pidAtb.symbol.parameters = []; // numParametro 0
             pidAtb.symbol.label = "main";
+
+            // Update semantic token for program definition
+            if (pidAtb.line && pidAtb.column) {
+                this.addSemanticToken(pidAtb.line, pidAtb.column, pidAtb.symbol.length || 1, 'function', ['definition']);
+            }
         }
         return new Attributes();
     }
@@ -261,16 +284,6 @@ export class SemanticActions {
         this.isGlobalScope = false;
         this.localDisplacement = 0;
 
-        // Ensure scope is created. SymbolTable enterScope creates new scope.
-        // We probably need a name for the scope. Using ID from previous rule or just 'local'?
-        // The Java code creates TSLocal.
-        // Usually attached to the procedure name.
-        // But acc9 just returns pos of ID.
-        // We need to enter scope *somewhere*.
-        // Java Procesador.gestorTS.createTSLocal() enters scope.
-        // I will assume the previous token was the Procedure/Function ID and we should enter scope 'local'.
-        // Wait, acc8 processed the ID. acc9 processes the ID for the body?
-        // Rule 9: ??? -> ID ...
         const idAtb = this.getAttribute(stack, 1);
 
         // Enter scope named after the ID or just generic
@@ -323,6 +336,11 @@ export class SemanticActions {
         if (pidAtb.symbol) {
             pidAtb.symbol.kind = SymbolKind.PROCEDURE;
             pidAtb.symbol.label = "ProcLabel" + (this.labelCounter++);
+
+            // Update semantic token for procedure definition
+            if (pidAtb.line && pidAtb.column) {
+                this.addSemanticToken(pidAtb.line, pidAtb.column, pidAtb.symbol.length || 1, 'function', ['definition']);
+            }
 
             const params: Parameter[] = [];
             if ((aAtb.length || 0) > 0) {
@@ -385,6 +403,11 @@ export class SemanticActions {
             pidAtb.symbol.returnType = this.stringToDataType(tAtb.type || "");
             pidAtb.symbol.label = "FuncLabel" + (this.labelCounter++);
 
+            // Update semantic token for function definition
+            if (pidAtb.line && pidAtb.column) {
+                this.addSemanticToken(pidAtb.line, pidAtb.column, pidAtb.symbol.length || 1, 'function', ['definition']);
+            }
+
             const params: Parameter[] = [];
             if ((aAtb.length || 0) > 0) {
                 const tipos = aAtb.type ? aAtb.type.split(" ") : [];
@@ -420,6 +443,11 @@ export class SemanticActions {
             } else {
                 idAtb.symbol.offset = this.localDisplacement;
                 this.localDisplacement += (tAtb.size || 0);
+            }
+
+            // Update semantic token
+            if (idAtb.line && idAtb.column) {
+                this.addSemanticToken(idAtb.line, idAtb.column, idAtb.symbol.length || 1, 'variable', ['definition']);
             }
         }
         return new Attributes();
@@ -473,6 +501,11 @@ export class SemanticActions {
                 res.ref = "value" + (aaAtb.ref ? " " + aaAtb.ref : "");
                 this.localDisplacement += (tAtb.size || 0);
             }
+
+            // Update semantic token
+            if (idAtb.line && idAtb.column) {
+                this.addSemanticToken(idAtb.line, idAtb.column, idAtb.symbol.length || 1, 'variable', ['definition']);
+            }
         }
 
         if (aaAtb.type && aaAtb.type !== "") {
@@ -512,6 +545,11 @@ export class SemanticActions {
                 idAtb.symbol.byReference = false;
                 res.ref = "value" + (aaAtb.ref ? " " + aaAtb.ref : "");
                 this.localDisplacement += (tAtb.size || 0);
+            }
+
+            // Update semantic token
+            if (idAtb.line && idAtb.column) {
+                this.addSemanticToken(idAtb.line, idAtb.column, idAtb.symbol.length || 1, 'variable', ['definition']);
             }
         }
 
@@ -805,11 +843,16 @@ export class SemanticActions {
         const idSymbol = idATB.symbol;
         let idTipo = "unknown";
         if (idSymbol) {
-             switch(idSymbol.dataType) {
-                 case DataType.INTEGER: idTipo = "integer"; break;
-                 // ...
-                 default: idTipo = "integer"; // Assume integer if not found/void? Or check
-             }
+            switch(idSymbol.dataType) {
+                case DataType.INTEGER: idTipo = "integer"; break;
+                // ...
+                default: idTipo = "integer"; // Assume integer if not found/void? Or check
+            }
+
+            // Update semantic token
+            if (idATB.line && idATB.column) {
+                this.addSemanticToken(idATB.line, idATB.column, idSymbol.length || 1, 'variable', []);
+            }
         }
 
         if (e1ATB.type === e2ATB.type && idTipo === e1ATB.type && e1ATB.type === "integer") {
@@ -999,34 +1042,39 @@ export class SemanticActions {
          let idTipo = "unknown";
          let kind = SymbolKind.UNKNOWN;
          if (sym) {
-             kind = sym.kind;
-             switch(sym.dataType) {
-                 case DataType.INTEGER: idTipo = "integer"; break;
-                 case DataType.BOOLEAN: idTipo = "logical"; break;
-                 case DataType.STRING: idTipo = "string"; break;
-             }
+            kind = sym.kind;
+            switch(sym.dataType) {
+                case DataType.INTEGER: idTipo = "integer"; break;
+                case DataType.BOOLEAN: idTipo = "logical"; break;
+                case DataType.STRING: idTipo = "string"; break;
+            }
+
+            // Update semantic token
+            if (idAtb.line && idAtb.column) {
+                this.addSemanticToken(idAtb.line, idAtb.column, sym.length || 1, 'variable', []);
+            }
          }
 
          if (idTipo === eTipo && eTipo !== "type_error") {
-             const res = new Attributes();
-             res.type = "type_ok";
-             res.exit = 0;
-             res.ret = "type_ok";
-             return res;
+            const res = new Attributes();
+            res.type = "type_ok";
+            res.exit = 0;
+            res.ret = "type_ok";
+            return res;
          } else {
-             // Error logic from Java
-             if (eTipo !== "type_error" && idTipo !== "type_error") {
-                 if (kind === SymbolKind.FUNCTION && "function" === "function") { // Placeholder logic matching Java
-                     this.addErrorFromAttr("Cannot assign a value to a function (or var = func)", idAtb);
-                 } // ... detailed error checks can be expanded
-                 this.addErrorFromAttr(`${idTipo} is not compatible with ${eTipo}`, idAtb);
-             }
+            // Error logic from Java
+            if (eTipo !== "type_error" && idTipo !== "type_error") {
+                if (kind === SymbolKind.FUNCTION && "function" === "function") { // Placeholder logic matching Java
+                    this.addErrorFromAttr("Cannot assign a value to a function (or var = func)", idAtb);
+                } // ... detailed error checks can be expanded
+                this.addErrorFromAttr(`${idTipo} is not compatible with ${eTipo}`, idAtb);
+            }
 
-             const res = new Attributes();
-             res.type = "type_error";
-             res.exit = 0;
-             res.ret = "type_ok";
-             return res;
+            const res = new Attributes();
+            res.type = "type_error";
+            res.exit = 0;
+            res.ret = "type_ok";
+            return res;
          }
     }
 
@@ -1041,44 +1089,49 @@ export class SemanticActions {
             return res;
         }
 
-        if ((llATB.length || 0) > 0 || sym.kind === SymbolKind.PROCEDURE) {
-             if (sym.label === "main") {
-                 this.addErrorFromAttr("The main program cannot be called", idATB);
-                 res.type = "type_error";
-             } else {
-                 const llAtributos = llATB.type ? llATB.type.split(" ") : [];
-                 const params = sym.parameters || [];
+        // Update semantic token
+        if (idATB.line && idATB.column) {
+            this.addSemanticToken(idATB.line, idATB.column, sym.length || 1, 'function', []);
+        }
 
-                 if (llAtributos.length !== params.length) {
-                     this.addErrorFromAttr(`Incorrect number of parameters: expected ${params.length}, received ${llAtributos.length}`, idATB);
-                     res.type = "type_error";
-                 } else {
-                     // Check each parameter type
-                     let allMatch = true;
-                     const errors: string[] = [];
-                     for (let i = 0; i < params.length; i++) {
-                         const expectedType = params[i].dataType === DataType.INTEGER ? "integer" :
-                                            params[i].dataType === DataType.BOOLEAN ? "logical" :
-                                            params[i].dataType === DataType.STRING ? "string" : "desconocido";
-                         if (llAtributos[i] !== expectedType && llAtributos[i] !== "type_error") {
-                             errors.push(`parameter ${i + 1}: expected ${expectedType}, received ${llAtributos[i]}`);
-                             allMatch = false;
-                         }
-                     }
-                     if (!allMatch) {
-                         this.addErrorFromAttr(`Incompatible parameter types: ${errors.join("; ")}`, idATB);
-                         res.type = "type_error";
-                     } else {
-                         res.type = "type_ok";
-                     }
-                 }
-             }
+        if ((llATB.length || 0) > 0 || sym.kind === SymbolKind.PROGRAM) {
+            if (sym.label === "main") {
+                this.addErrorFromAttr("The main program cannot be called", idATB);
+                res.type = "type_error";
+            } else {
+                const llAtributos = llATB.type ? llATB.type.split(" ") : [];
+                const params = sym.parameters || [];
+
+                if (llAtributos.length !== params.length) {
+                    this.addErrorFromAttr(`Incorrect number of parameters: expected ${params.length}, received ${llAtributos.length}`, idATB);
+                    res.type = "type_error";
+                } else {
+                    // Check each parameter type
+                    let allMatch = true;
+                    const errors: string[] = [];
+                    for (let i = 0; i < params.length; i++) {
+                        const expectedType = params[i].dataType === DataType.INTEGER ? "integer" :
+                                        params[i].dataType === DataType.BOOLEAN ? "logical" :
+                                        params[i].dataType === DataType.STRING ? "string" : "desconocido";
+                        if (llAtributos[i] !== expectedType && llAtributos[i] !== "type_error") {
+                            errors.push(`parameter ${i + 1}: expected ${expectedType}, received ${llAtributos[i]}`);
+                            allMatch = false;
+                        }
+                    }
+                    if (!allMatch) {
+                        this.addErrorFromAttr(`Incompatible parameter types: ${errors.join("; ")}`, idATB);
+                        res.type = "type_error";
+                    } else {
+                        res.type = "type_ok";
+                    }
+                }
+            }
         } else {
-             if (!sym.parameters || sym.parameters.length === 0) res.type = "type_ok";
-             else {
-                 this.addErrorFromAttr(`Missing parameters: expected ${sym.parameters.length}, received 0`, idATB);
-                 res.type = "type_error";
-             }
+            if (!sym.parameters || sym.parameters.length === 0) res.type = "type_ok";
+            else {
+                this.addErrorFromAttr(`Missing parameters: expected ${sym.parameters.length}, received 0`, idATB);
+                res.type = "type_error";
+            }
         }
         res.exit = 0;
         res.ret = "type_ok";
@@ -1165,7 +1218,12 @@ export class SemanticActions {
         const sym = idATB.symbol;
         let t = "unknown";
         if(sym) {
-             t = (sym.dataType === DataType.INTEGER) ? "integer" : "string"; // simplified
+            t = (sym.dataType === DataType.INTEGER) ? "integer" : "string"; // simplified
+
+            // Update semantic token
+            if (idATB.line && idATB.column) {
+                this.addSemanticToken(idATB.line, idATB.column, sym.length || 1, 'variable', []);
+            }
         }
 
         if (!wATB.type || wATB.type === "") res.type = t;
@@ -1332,6 +1390,11 @@ export class SemanticActions {
         const llAtributos = llAtb.type ? llAtb.type.split(/\s+/) : [];
         const argCount = llAtb.length || 0;
 
+        // Update semantic token
+        if (idAtb.line && idAtb.column) {
+            this.addSemanticToken(idAtb.line, idAtb.column, sym.length || 1, argCount === 0 ? 'variable' : 'function', []);
+        }
+
         if (sym.kind === SymbolKind.FUNCTION) {
             const params = sym.parameters || [];
             if (argCount !== params.length) {
@@ -1425,5 +1488,12 @@ export class SemanticActions {
         const res = new Attributes();
         res.ref = "value";
         return res;
+    }
+
+    /**
+     * Get semantic tokens collected during analysis
+     */
+    public getSemanticTokens(): SemanticToken[] {
+        return this.semanticTokens;
     }
 }

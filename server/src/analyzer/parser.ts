@@ -610,7 +610,7 @@ export class Parser {
         }
 
         // Execute semantic action for this production
-        const resultAttributes = this.semanticActions.executeAction(action.value, this.semanticStack, production.rhsLength);
+        const resultAttributes = this.semanticActions.executeAction(action.value, this.semanticStack);
 
         // Calculate the full length of the reduced symbol by summing all RHS elements
         if (production.rhsLength > 0) {

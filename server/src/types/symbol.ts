@@ -70,6 +70,17 @@ export interface SemanticError {
 }
 
 /**
+ * Semantic token for highlighting
+ */
+export interface SemanticToken {
+  line: number; // 0-based
+  column: number; // 0-based
+  length: number;
+  tokenType: 'variable' | 'function';
+  tokenModifiers: string[]; // e.g., ['definition']
+}
+
+/**
  * Scope information for nested scopes
  */
 export interface Scope {

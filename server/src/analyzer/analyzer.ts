@@ -4,7 +4,7 @@ import { SymbolTable } from './symbolTable';
 import { ASTNode } from '../types/ast';
 import { TokenType } from '../types/token';
 import { LexicalError } from '../types/token';
-import { SemanticError } from '../types/symbol';
+import { SemanticError, SemanticToken } from '../types/symbol';
 import { SyntaxError } from '../types/ast';
 
 /**
@@ -45,6 +45,7 @@ export class IntegratedAnalyzer {
     syntaxErrors: SyntaxError[];
     semanticErrors: SemanticError[];
     semanticWarnings: SemanticError[];
+    semanticTokens: SemanticToken[];
     symbolTable: SymbolTable;
   } {
     // Parse - this will call lexer incrementally
@@ -63,12 +64,16 @@ export class IntegratedAnalyzer {
     const semanticErrors = semanticActions.errors;
     const semanticWarnings = semanticActions.warnings;
 
+    // Get semantic tokens from lexer and semantic actions
+    const semanticTokens = semanticActions.getSemanticTokens();
+
     return {
       ast,
       lexicalErrors,
       syntaxErrors,
       semanticErrors,
       semanticWarnings,
+      semanticTokens,
       symbolTable: this.symbolTable
     };
   }
