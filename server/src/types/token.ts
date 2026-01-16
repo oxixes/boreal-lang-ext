@@ -89,6 +89,8 @@ export interface Token {
   line: number;
   column: number;
   position: number;
+  length: number;
+  fullLength: number; // Length including skipped separators before this token
   symbol?: BorealSymbol;  // Reference to symbol table entry (for identifiers)
 }
 

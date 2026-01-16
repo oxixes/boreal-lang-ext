@@ -52,6 +52,7 @@ export class Attributes {
   line?: number;
   column?: number;
   llength?: number;
+  fullLength?: number;
   position?: number;
 
   // For return propagation
@@ -567,7 +568,8 @@ export class Parser {
         const attr: Attributes = {
           line: token.line,
           column: token.column,
-          llength: token.lexeme.length,
+          llength: token.length,
+          fullLength: token.fullLength,
           position: token.position
         };
         if (token.type === TokenType.IDENTIFIER) {
@@ -616,6 +618,7 @@ export class Parser {
         // Calculate the full length of the reduced symbol by summing all RHS elements
         if (production.rhsLength > 0) {
             let totalLength = 0;
+            let totalFullLength = 0;
             let firstPosition = -1;
             let firstLine = -1;
             let firstColumn = -1;
@@ -630,9 +633,11 @@ export class Parser {
                             firstPosition = attr.position;
                             firstLine = attr.line || 0;
                             firstColumn = attr.column || 0;
-                        }
-                        if (attr.llength !== undefined) {
-                            totalLength += attr.llength;
+                            totalLength = attr.llength || 0;
+                            totalFullLength = attr.fullLength || 0;
+                        } else if (attr.fullLength !== undefined) {
+                            totalLength += attr.fullLength;
+                            totalFullLength += attr.fullLength;
                         }
                     }
                 }
@@ -641,6 +646,9 @@ export class Parser {
             // Set combined length on result if we found any
             if (totalLength > 0 && !resultAttributes.llength) {
                 resultAttributes.llength = totalLength;
+            }
+            if (totalFullLength > 0 && !resultAttributes.fullLength) {
+                resultAttributes.fullLength = totalFullLength;
             }
             if (firstPosition >= 0 && !resultAttributes.position) {
                 resultAttributes.position = firstPosition;

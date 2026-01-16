@@ -194,9 +194,9 @@ export class SemanticActions {
         const rAtb = this.getAttribute(stack, 1);
         const count = rAtb.program_count || 0;
         if (count < 1) {
-            this.addError("There must be a program declaration");
+            this.addError("At least one program declaration is required");
         } else if (count > 1) {
-            this.addError("Only one program declaration can exist");
+            this.addError("Multiple program declarations found (only one allowed)");
         }
         // destroy global table? reset scopes.
         // this.symbolTable.reset(); // Maybe not if we want to keep context
@@ -247,7 +247,7 @@ export class SemanticActions {
     private acc7(stack: Attributes[]): Attributes {
         const bloqueAtb = this.getAttribute(stack, 3);
         if (bloqueAtb.ret !== "type_ok" && bloqueAtb.ret !== "" && bloqueAtb.ret !== undefined) {
-            this.addError("Main program with non-empty return instruction", bloqueAtb.retPosition || 0, bloqueAtb.retLine || 0, bloqueAtb.retColumn || 0, bloqueAtb.retLength || 0);
+            this.addError("Return statement not allowed in main program", bloqueAtb.retPosition || 0, bloqueAtb.retLine || 0, bloqueAtb.retColumn || 0, bloqueAtb.retLength || 0);
         }
 
         if ((bloqueAtb.exit || 0) > 0) {
@@ -255,7 +255,7 @@ export class SemanticActions {
             const line = bloqueAtb.exitLine || bloqueAtb.line || 0;
             const col = bloqueAtb.exitColumn || bloqueAtb.column || 0;
             const len = bloqueAtb.exitLength || bloqueAtb.llength || 0;
-            this.addError("Exit detected outside loop in Main Program", pos, line, col, len);
+            this.addError("Exit statement must be inside a loop", pos, line, col, len);
         }
         this.symbolTable.exitScope(); // destroy local
         this.isGlobalScope = true;
@@ -305,20 +305,20 @@ export class SemanticActions {
     private acc11(stack: Attributes[]): Attributes {
         const bloqueAtb = this.getAttribute(stack, 3);
         if (bloqueAtb.type === "type_error")
-            this.addError("Error detected in the procedure body", 0, bloqueAtb.line || 0, bloqueAtb.column || 0, bloqueAtb.llength || 0);
+            this.addError("Type error in procedure body", 0, bloqueAtb.line || 0, bloqueAtb.column || 0, bloqueAtb.llength || 0);
         if (bloqueAtb.ret !== "" && bloqueAtb.ret !== "type_ok") {
             const pos = bloqueAtb.retPosition || 0;
             const line = bloqueAtb.retLine || 0;
             const col = bloqueAtb.retColumn || 0;
             const len = bloqueAtb.retLength || 0;
-            this.addError("Procedure with non-empty return instruction", pos, line, col, len);
+            this.addError("Return statement not allowed in procedure", pos, line, col, len);
         }
         if ((bloqueAtb.exit || 0) > 0) {
             const pos = bloqueAtb.exitPosition || bloqueAtb.position || 0;
             const line = bloqueAtb.exitLine || bloqueAtb.line || 0;
             const col = bloqueAtb.exitColumn || bloqueAtb.column || 0;
             const len = bloqueAtb.exitLength || bloqueAtb.llength || 0;
-            this.addError("Exit detected outside loop in Procedure", pos, line, col, len);
+            this.addError("Exit statement must be inside a loop", pos, line, col, len);
         }
 
         this.symbolTable.exitScope();
@@ -373,9 +373,9 @@ export class SemanticActions {
             const line = bloqueAtb.retLine || 0;
             const col = bloqueAtb.retColumn || 0;
             const len = bloqueAtb.retLength || 0;
-            this.addError("Function with invalid return", pos, line, col, len);
+            this.addError(`Return type mismatch: expected '${pfidatAtb.type}', got '${bloqueAtb.ret}'`, pos, line, col, len);
         } else if (bloqueAtb.ret === "type_ok" && pfidatAtb.type !== "void" && pfidatAtb.type !== "void") {
-            this.addError("The function must return a value of type " + pfidatAtb.type, pfidatAtb.position || 0, pfidatAtb.line || 0, pfidatAtb.column || 0, pfidatAtb.llength || 0);
+            this.addError(`Function must return a value of type '${pfidatAtb.type}'`, pfidatAtb.position || 0, pfidatAtb.line || 0, pfidatAtb.column || 0, pfidatAtb.llength || 0);
         }
 
         if ((bloqueAtb.exit || 0) > 0) {
@@ -383,7 +383,7 @@ export class SemanticActions {
             const line = bloqueAtb.exitLine || bloqueAtb.line || 0;
             const col = bloqueAtb.exitColumn || bloqueAtb.column || 0;
             const len = bloqueAtb.exitLength || bloqueAtb.llength || 0;
-            this.addError("Exit cannot be placed outside the loop", pos, line, col, len);
+            this.addError("Exit statement must be inside a loop", pos, line, col, len);
         }
 
         this.symbolTable.exitScope();
@@ -628,7 +628,7 @@ export class SemanticActions {
             const col = cAtb.retColumn || bAtb.retColumn || 0;
             const len = cAtb.retLength || bAtb.retLength || 0;
             const pos = cAtb.retPosition || bAtb.retPosition || 0;
-            this.addError("Return types of different types in subprogram", pos, line, col, len);
+            this.addError(`Inconsistent return types: '${bRet}' and '${cRet}'`, pos, line, col, len);
 
             res.retLine = line;
             res.retColumn = col;
@@ -655,7 +655,7 @@ export class SemanticActions {
         else {
             res.type = "type_error";
             if (eeAtb.type !== "type_error") {
-                this.addErrorFromAttr(`The IF statement only accepts logical expressions.\n \t Received: [${eeAtb.type}]`, eeAtb);
+                this.addErrorFromAttr(`Type mismatch in IF condition: expected 'logical', got '${eeAtb.type}'`, eeAtb);
             }
         }
         res.exit = sAtb.exit;
@@ -697,7 +697,7 @@ export class SemanticActions {
         else {
             res.type = "type_error";
             if (eeAtb.type !== "type_error") {
-                this.addErrorFromAttr("Compound conditional statement with non-logical condition", eeAtb);
+                this.addErrorFromAttr(`Type mismatch in condition: expected 'logical', got '${eeAtb.type}'`, eeAtb);
             }
         }
         res.exit = bloqueAtb.exit;
@@ -748,7 +748,7 @@ export class SemanticActions {
             const line = thenAtb.retLine || bloqueAtb.retLine || 0;
             const col = thenAtb.retColumn || bloqueAtb.retColumn || 0;
             const len = thenAtb.retLength || bloqueAtb.retLength || 0;
-            this.addError("Return instructions of different types in compound conditional statement", pos, line, col, len);
+            this.addError(`Inconsistent return types in IF-ELSE: '${thenAtb.ret}' and '${bloqueAtb.ret}'`, pos, line, col, len);
 
             res.retLine = line;
             res.retColumn = col;
@@ -779,7 +779,7 @@ export class SemanticActions {
             res.type = bloqueATB.type;
         } else {
             if (eeATB.type !== "type_error") {
-                this.addError(`Incompatible type. Received: ${eeATB.type}; Expected: Logical`, eeATB.position || 0, eeATB.line || 0, eeATB.column || 0, eeATB.llength || 0);
+                this.addError(`Type mismatch: expected 'logical', got '${eeATB.type}'`, eeATB.position || 0, eeATB.line || 0, eeATB.column || 0, eeATB.llength || 0);
             }
             res.type = "type_error";
         }
@@ -801,7 +801,7 @@ export class SemanticActions {
         res.type = cATB.type;
         res.exit = 0;
         if (cATB.exit !== 1) {
-             this.addErrorFromAttr("Loop: Must contain at least one exit", loopATB);
+             this.addErrorFromAttr("Loop must contain at least one exit statement", loopATB);
         }
         res.ret = cATB.ret;
         res.retLine = cATB.retLine;
@@ -824,7 +824,7 @@ export class SemanticActions {
          else {
             // Don't report error if forATB already has type_error
             if (forATB.type !== "type_error") {
-                this.addErrorFromAttr("Error in FOR loop", forATB);
+                this.addErrorFromAttr("Type error in FOR loop", forATB);
             }
             res.type = "type_error";
          }
@@ -868,7 +868,7 @@ export class SemanticActions {
             res.type = "type_ok";
         } else {
             if (e1ATB.type !== "type_error" && e2ATB.type !== "type_error") {
-                this.addErrorFromAttr("Invalid for types", forATB);
+                this.addErrorFromAttr(`FOR loop requires integer types: variable='${idTipo}', from='${e1ATB.type}', to='${e2ATB.type}'`, forATB);
             }
             res.type = "type_error";
         }
@@ -886,7 +886,7 @@ export class SemanticActions {
             res.type = "type_ok";
         } else {
             if (oATB.type === "type_ok" && expATB.type !== "type_error")
-                 this.addErrorFromAttr(`Invalid case types`, caseATB);
+                 this.addErrorFromAttr(`CASE expression must be integer, got '${expATB.type}'`, caseATB);
             res.type = "type_error";
         }
         res.exit = (nATB.exit || 0) + (oATB.exit || 0);
@@ -917,7 +917,7 @@ export class SemanticActions {
              const len = nATB.retLength || oATB.retLength || 0;
 
              if (nATB.ret !== "type_error" && oATB.ret !== "type_error")
-                this.addError("Incompatible return types in case", pos, line, col, len);
+                this.addError(`Inconsistent return types in CASE: '${nATB.ret}' and '${oATB.ret}'`, pos, line, col, len);
 
              res.retLine = line;
              res.retColumn = col;
@@ -942,7 +942,7 @@ export class SemanticActions {
         if (nATB.type === "type_ok") res.type = bloqueATB.type;
         else {
              if (nATB.type !== "type_error") {
-                 this.addErrorFromAttr("Error in case", nATB);
+                 this.addErrorFromAttr("Type error in CASE branch", nATB);
              }
              res.type = "type_error";
         }
@@ -973,7 +973,7 @@ export class SemanticActions {
             const len = nATB.retLength || bloqueATB.retLength || 0;
 
             if (nATB.ret !== "type_error" && bloqueATB.ret !== "type_error")
-                this.addError("Incompatible return types in case", pos, line, col, len);
+                this.addError(`Inconsistent return types in CASE branch: '${nATB.ret}' and '${bloqueATB.ret}'`, pos, line, col, len);
 
             res.retLine = line;
             res.retColumn = col;
@@ -1000,9 +1000,21 @@ export class SemanticActions {
     private acc47(): Attributes { return this.acc28(); }
 
     private acc48(stack: Attributes[]): Attributes {
+        // Create a semantic token for WRITE
+        const writeAtb = this.getAttribute(stack, 5);
+        if (writeAtb.line && writeAtb.column) {
+            this.addSemanticToken(writeAtb.line, writeAtb.column, 5, 'function', []);
+        }
+
         return this.checkWrite(stack, "WRITE");
     }
     private acc49(stack: Attributes[]): Attributes {
+        // Create a semantic token for WRITELN
+        const writelnAtb = this.getAttribute(stack, 5);
+        if (writelnAtb.line && writelnAtb.column) {
+            this.addSemanticToken(writelnAtb.line, writelnAtb.column, 7, 'function', []);
+        }
+
         return this.checkWrite(stack, "WRITELN");
     }
 
@@ -1014,7 +1026,7 @@ export class SemanticActions {
             const tipos = llATB.type.split(/\s+/);
             for (const tipo of tipos) {
                 if (tipo !== "" && tipo !== "integer" && tipo !== "string" && tipo !== "type_error") {
-                     this.addErrorFromAttr(`${stmt} only accepts integer or string, received ${tipo}`, llATB);
+                     this.addErrorFromAttr(`${stmt} statement: expected 'integer' or 'string', got '${tipo}'`, llATB);
                      res.type = "type_error";
                      break;
                 }
@@ -1027,12 +1039,19 @@ export class SemanticActions {
 
     private acc50(stack: Attributes[]): Attributes {
         const res = new Attributes();
+
+        // Create a semantic token for READ
+        const readAtb = this.getAttribute(stack, 9);
+        if (readAtb.line && readAtb.column) {
+            this.addSemanticToken(readAtb.line, readAtb.column, 4, 'function', []);
+        }
+
         const vATB = this.getAttribute(stack, 5);
         res.type = "type_ok";
         const tipos = vATB.type ? vATB.type.split(/\s+/) : [];
         for (const tipo of tipos) {
             if (tipo !== "integer" && tipo !== "string" && tipo !== "type_error") {
-                this.addErrorFromAttr(`READ only accepts integer or string, received ${tipo}`, vATB);
+                this.addErrorFromAttr(`READ statement: expected 'integer' or 'string', got '${tipo}'`, vATB);
                 res.type = "type_error";
                 break;
             }
@@ -1073,10 +1092,10 @@ export class SemanticActions {
          } else {
             // Error logic from Java
             if (eTipo !== "type_error" && idTipo !== "type_error") {
-                if (kind === SymbolKind.FUNCTION && "function" === "function") { // Placeholder logic matching Java
-                    this.addErrorFromAttr("Cannot assign a value to a function (or var = func)", idAtb);
-                } // ... detailed error checks can be expanded
-                this.addErrorFromAttr(`${idTipo} is not compatible with ${eTipo}`, idAtb);
+                if (kind === SymbolKind.FUNCTION) {
+                    this.addErrorFromAttr("Cannot assign value to a function", idAtb);
+                }
+                this.addErrorFromAttr(`Type mismatch in assignment: cannot assign '${eTipo}' to '${idTipo}'`, idAtb);
             }
 
             const res = new Attributes();
@@ -1105,14 +1124,14 @@ export class SemanticActions {
 
         if ((llATB.length || 0) > 0 || sym.kind === SymbolKind.PROGRAM) {
             if (sym.label === "main") {
-                this.addErrorFromAttr("The main program cannot be called", idATB);
+                this.addErrorFromAttr("Cannot call main program", idATB);
                 res.type = "type_error";
             } else {
                 const llAtributos = llATB.type ? llATB.type.split(" ") : [];
                 const params = sym.parameters || [];
 
                 if (llAtributos.length !== params.length) {
-                    this.addErrorFromAttr(`Incorrect number of parameters: expected ${params.length}, received ${llAtributos.length}`, idATB);
+                    this.addErrorFromAttr(`Argument count mismatch: expected ${params.length}, got ${llAtributos.length}`, idATB);
                     res.type = "type_error";
                 } else {
                     // Check each parameter type
@@ -1128,7 +1147,7 @@ export class SemanticActions {
                         }
                     }
                     if (!allMatch) {
-                        this.addErrorFromAttr(`Incompatible parameter types: ${errors.join("; ")}`, idATB);
+                        this.addErrorFromAttr(`Parameter type mismatch: ${errors.join("; ")}`, idATB);
                         res.type = "type_error";
                     } else {
                         res.type = "type_ok";
@@ -1138,7 +1157,7 @@ export class SemanticActions {
         } else {
             if (!sym.parameters || sym.parameters.length === 0) res.type = "type_ok";
             else {
-                this.addErrorFromAttr(`Missing parameters: expected ${sym.parameters.length}, received 0`, idATB);
+                this.addErrorFromAttr(`Argument count mismatch: expected ${sym.parameters.length}, got 0`, idATB);
                 res.type = "type_error";
             }
         }
@@ -1169,7 +1188,7 @@ export class SemanticActions {
         if (eATB.type === "logical") res.type = "type_ok";
         else {
              if (eATB.type !== "type_error") {
-                 this.addErrorFromAttr("Exit condition error", exitKw);
+                 this.addErrorFromAttr(`Type mismatch in EXIT condition: expected 'logical', got '${eATB.type}'`, exitKw);
              }
              res.type = "type_error";
         }
@@ -1300,11 +1319,11 @@ export class SemanticActions {
              // Don't report error if already reported (type_error)
              if (l.type !== "type_error" && r.type !== "type_error") {
                  if (l.type !== typeL && r.type !== typeR) {
-                     this.addErrorFromAttr(`Incompatible types: left operand expected ${typeL} but received ${l.type}, right operand expected ${typeR} but received ${r.type}`, l);
+                     this.addErrorFromAttr(`Type mismatch: expected '${typeL}' and '${typeR}', got '${l.type}' and '${r.type}'`, l);
                  } else if (l.type !== typeL) {
-                     this.addErrorFromAttr(`Incompatible type: left operand expected ${typeL} but received ${l.type}`, l);
+                     this.addErrorFromAttr(`Type mismatch in left operand: expected '${typeL}', got '${l.type}'`, l);
                  } else {
-                     this.addErrorFromAttr(`Incompatible type: right operand expected ${typeR} but received ${r.type}`, r);
+                     this.addErrorFromAttr(`Type mismatch in right operand: expected '${typeR}', got '${r.type}'`, r);
                  }
              }
              res.type = "type_error";
@@ -1325,9 +1344,9 @@ export class SemanticActions {
             // Don't report error if already reported (type_error)
             if (i.type !== "type_error" && h.type !== "type_error") {
                 if (i.type !== h.type) {
-                    this.addErrorFromAttr(`Incompatible types for +: left operand ${h.type}, right operand ${i.type}`, h);
+                    this.addErrorFromAttr(`Type mismatch in '+' operator: operands have types '${h.type}' and '${i.type}'`, h);
                 } else if (i.type !== "integer" && i.type !== "string") {
-                    this.addErrorFromAttr(`Incompatible type for +: expected integer or string, received ${i.type}`, i);
+                    this.addErrorFromAttr(`Invalid type for '+' operator: expected 'integer' or 'string', got '${i.type}'`, i);
                 }
             }
             res.type = "type_error";
@@ -1357,7 +1376,7 @@ export class SemanticActions {
         if(v.type === "logical") res.type = "logical";
         else {
             if (v.type !== "type_error") {
-                this.addErrorFromAttr("Expected logical", v);
+                this.addErrorFromAttr(`Type mismatch in NOT operator: expected 'logical', got '${v.type}'`, v);
             }
             res.type = "type_error";
         }
@@ -1370,7 +1389,7 @@ export class SemanticActions {
          if(v.type === "integer") res.type = "integer";
          else {
              if (v.type !== "type_error") {
-                 this.addErrorFromAttr("Expected integer", v);
+                 this.addErrorFromAttr(`Type mismatch in unary '+' operator: expected 'integer', got '${v.type}'`, v);
              }
              res.type = "type_error";
          }
@@ -1394,66 +1413,90 @@ export class SemanticActions {
         const idAtb = this.getAttribute(stack, 3); // id
 
         const sym = idAtb.symbol;
-        if (!sym) { res.type="type_error"; return res; }
-
-        const llAtributos = llAtb.type ? llAtb.type.split(/\s+/) : [];
-        const argCount = llAtb.length || 0;
+        if (!sym) {
+            this.addErrorFromAttr("Undefined identifier", idAtb);
+            res.type = "type_error";
+            return res;
+        }
 
         // Update semantic token
         if (idAtb.line && idAtb.column) {
-            this.addSemanticToken(idAtb.line, idAtb.column, sym.length || 1, argCount === 0 ? 'variable' : 'function', []);
+            this.addSemanticToken(idAtb.line, idAtb.column, sym.length || 1, llAtb.length === 0 ? 'variable' : 'function', []);
         }
 
         if (sym.kind === SymbolKind.FUNCTION) {
-            const params = sym.parameters || [];
-            if (argCount !== params.length) {
-                this.addErrorFromAttr(`Incorrect number of arguments: expected ${params.length}, received ${argCount}`, idAtb);
-                res.type = "type_error";
-            } else {
-                let typeError = false;
-                for (let i = 0; i < params.length; i++) {
-                    const expectedType = params[i].dataType === DataType.INTEGER ? "integer" :
-                                       params[i].dataType === DataType.BOOLEAN ? "logical" :
-                                       params[i].dataType === DataType.STRING ? "string" : "unknown";
-                    if (llAtributos[i] !== expectedType) {
-                        this.addErrorFromAttr(`Argument ${i+1} type mismatch: expected ${expectedType}, received ${llAtributos[i]}`, idAtb);
-                        typeError = true;
-                    }
-                }
-                if (typeError) {
-                    res.type = "type_error";
+            const returnType = sym.returnType === DataType.INTEGER ? "integer" :
+                             sym.returnType === DataType.BOOLEAN ? "logical" : "string";
+            const numParams = sym.parameters?.length || 0;
+
+            if (numParams > 0) {
+                const llAtributos = llAtb.type ? llAtb.type.split(/\s+/) : [];
+                const params = sym.parameters || [];
+                const expectedTypes = params.map(p =>
+                    p.dataType === DataType.INTEGER ? "integer" :
+                    p.dataType === DataType.BOOLEAN ? "logical" : "string"
+                );
+
+                if (llAtributos.length === expectedTypes.length && this.arraysEqual(llAtributos, expectedTypes)) {
+                    res.type = returnType;
                 } else {
-                    res.type = sym.returnType === DataType.INTEGER ? "integer" :
-                              sym.returnType === DataType.BOOLEAN ? "logical" : "string";
+                    this.addErrorFromAttr(
+                        `Function parameter mismatch\n\tExpected: [${expectedTypes.join(", ")}]\n\tReceived: [${llAtributos.join(", ")}]`,
+                        idAtb
+                    );
+                    res.type = "type_error";
                 }
+            } else {
+                res.type = returnType;
             }
         } else if (sym.kind === SymbolKind.PROCEDURE) {
-            const params = sym.parameters || [];
-            if (argCount !== params.length) {
-                this.addErrorFromAttr(`Incorrect number of arguments for procedure: expected ${params.length}, received ${argCount}`, idAtb);
-            } else if (params.length > 0) {
-                for (let i = 0; i < params.length; i++) {
-                    const expectedType = params[i].dataType === DataType.INTEGER ? "integer" :
-                                       params[i].dataType === DataType.BOOLEAN ? "logical" :
-                                       params[i].dataType === DataType.STRING ? "string" : "unknown";
-                    if (llAtributos[i] !== expectedType) {
-                        this.addErrorFromAttr(`Argument ${i+1} type mismatch for procedure: expected ${expectedType}, received ${llAtributos[i]}`, idAtb);
+            const label = sym.label || "";
+
+            if (label === "main") {
+                this.addErrorFromAttr("Cannot call main program", idAtb);
+            } else {
+                this.addErrorFromAttr("Procedures do not return values", idAtb);
+                const numParams = sym.parameters?.length || 0;
+                if (numParams > 0) {
+                    const llAtributos = llAtb.type ? llAtb.type.split(/\s+/) : [];
+                    const params = sym.parameters || [];
+                    const expectedTypes = params.map(p =>
+                        p.dataType === DataType.INTEGER ? "integer" :
+                        p.dataType === DataType.BOOLEAN ? "logical" : "string"
+                    );
+                    if (llAtributos.length !== expectedTypes.length || !this.arraysEqual(llAtributos, expectedTypes)) {
+                        this.addErrorFromAttr(
+                            `Procedure parameter mismatch\n\tExpected: [${expectedTypes.join(", ")}]\n\tReceived: [${llAtributos.join(", ")}]`,
+                            idAtb
+                        );
                     }
                 }
             }
-            this.addErrorFromAttr("A procedure returns nothing", idAtb);
             res.type = "type_error";
         } else {
-            // variable
-            if (argCount > 0) {
-                this.addErrorFromAttr("Variables do not take arguments", idAtb);
-                res.type = "type_error";
-            } else {
-                res.type = sym.dataType === DataType.INTEGER ? "integer" :
+            // Variable
+            const idType = sym.dataType === DataType.INTEGER ? "integer" :
                           sym.dataType === DataType.BOOLEAN ? "logical" : "string";
+            if ((idType === "integer" || idType === "logical" || idType === "string")
+                && (llAtb.type === "" || !llAtb.type)) {
+                res.type = idType;
+            } else {
+                this.addErrorFromAttr(
+                    `Invalid variable access: '${idType}'`,
+                    idAtb
+                );
+                res.type = "type_error";
             }
         }
         return res;
+    }
+
+    private arraysEqual(arr1: string[], arr2: string[]): boolean {
+        if (arr1.length !== arr2.length) return false;
+        for (let i = 0; i < arr1.length; i++) {
+            if (arr1[i] !== arr2[i]) return false;
+        }
+        return true;
     }
 
     private acc95(stack: Attributes[]): Attributes {
@@ -1462,29 +1505,85 @@ export class SemanticActions {
         return res;
     }
 
-    // Array access / casting checks? "zAtb.getTipo().equals('entero')"
     private acc96(stack: Attributes[]): Attributes {
         const res = new Attributes();
+        const lAtb = this.getAttribute(stack, 3);
         const zAtb = this.getAttribute(stack, 9);
-        if (zAtb.type === "integer") res.type = "logical";
-        else {
-             if (zAtb.type !== "type_error") {
-                 this.addErrorFromAttr("Expected integer for index", zAtb);
-             }
-             res.type = "type_error";
+
+        if (zAtb.type === "integer") {
+            res.type = "logical";
+        } else {
+            res.type = "type_error";
+            if (zAtb.type !== "type_error") {
+                this.addErrorFromAttr(
+                    `Type mismatch in array index: expected 'integer', got '${zAtb.type}'`,
+                    zAtb
+                );
+            }
+            return res;
+        }
+
+        const types = lAtb.type ? lAtb.type.split(/\s+/) : [];
+        for (const type of types) {
+            if (type !== "integer" && type !== "type_error") {
+                res.type = "type_error";
+                this.addErrorFromAttr(
+                    `Type mismatch in list: all elements must be 'integer', found '${type}'`,
+                    lAtb
+                );
+                break;
+            }
         }
         return res;
     }
 
     private acc97(stack: Attributes[]): Attributes {
         const res = new Attributes();
+        const lAtb = this.getAttribute(stack, 3);
         res.type = "integer";
+
+        // Add semantic token for max
+        const maxAtb = this.getAttribute(stack, 7);
+        if (maxAtb.line && maxAtb.column) {
+            this.addSemanticToken(maxAtb.line, maxAtb.column, 3, 'function', []);
+        }
+
+        const types = lAtb.type ? lAtb.type.split(/\s+/) : [];
+        for (const type of types) {
+            if (type !== "integer" && type !== "type_error") {
+                res.type = "type_error";
+                this.addErrorFromAttr(
+                    `Type mismatch in 'max' function: expected 'integer', got '${type}'`,
+                    lAtb
+                );
+                break;
+            }
+        }
         return res;
     }
     private acc98(stack: Attributes[]): Attributes {
-         const res = new Attributes();
-         res.type = "integer";
-         return res;
+        const res = new Attributes();
+        const lAtb = this.getAttribute(stack, 3);
+        res.type = "integer";
+
+        // Add semantic token for min
+        const minAtb = this.getAttribute(stack, 7);
+        if (minAtb.line && minAtb.column) {
+            this.addSemanticToken(minAtb.line, minAtb.column, 3, 'function', []);
+        }
+
+        const types = lAtb.type ? lAtb.type.split(/\s+/) : [];
+        for (const type of types) {
+            if (type !== "integer" && type !== "type_error") {
+                res.type = "type_error";
+                this.addErrorFromAttr(
+                    `Type mismatch in 'min' function: expected 'integer', got '${type}'`,
+                    lAtb
+                );
+                break;
+            }
+        }
+        return res;
     }
 
     private acc99(): Attributes {

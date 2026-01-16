@@ -234,16 +234,16 @@ connection.onHover((params: HoverParams): Hover | undefined => {
 
     let content = '';
     if (symbol.kind === SymbolKind.VARIABLE) {
-      content = `var ${symbol.originalLexeme}: ${symbol.dataType || 'unknown'}`;
+      content = `VAR ${symbol.originalLexeme}: ${symbol.dataType || 'unknown'}`;
     } else if (symbol.kind === SymbolKind.FUNCTION) {
       const paramsStr = symbol.parameters ? symbol.parameters.map(p => `${p.byReference ? 'ref ' : ''}${p.name}: ${p.dataType}`).join('; ') : '';
-      content = `function ${symbol.originalLexeme}(${paramsStr}): ${symbol.returnType || 'void'}`;
+      content = `FUNCTION ${symbol.originalLexeme}(${paramsStr}): ${symbol.returnType || 'void'}`;
     } else if (symbol.kind === SymbolKind.PROCEDURE) {
       const paramsStr = symbol.parameters ? symbol.parameters.map(p => `${p.byReference ? 'ref ' : ''}${p.name}: ${p.dataType}`).join('; ') : '';
-      content = `procedure ${symbol.originalLexeme}(${paramsStr})`;
+      content = `PROCEDURE ${symbol.originalLexeme}(${paramsStr})`;
     } else if (symbol.kind === SymbolKind.PROGRAM) {
       const paramsStr = symbol.parameters ? symbol.parameters.map(p => `${p.byReference ? 'ref ' : ''}${p.name}: ${p.dataType}`).join('; ') : '';
-      content = `program ${symbol.originalLexeme}(${paramsStr})`;
+      content = `PROGRAM ${symbol.originalLexeme}(${paramsStr})`;
     } else {
       return undefined;
     }

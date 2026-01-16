@@ -697,13 +697,13 @@ export class Lexer {
     return this.transitionMatrix[state]?.[column] ?? null;
   }
 
-  /**
-   * Generate the next token using the state machine
-   */
   private getNextTokenInternal(): Token | null {
     let state = 0;
     let prevState = 0;
     this.lexeme = '';
+
+    // Store initial position (right after previous token, before skipping whitespace)
+    const initialPosition = this.position;
 
     // Store token start position (will be updated when we leave state 0)
     let startPosition = this.position;
@@ -760,7 +760,9 @@ export class Lexer {
             lexeme: '>=',
             line: startLine,
             column: startColumn,
-            position: startPosition
+            position: startPosition,
+            length: 2,
+            fullLength: (startPosition - initialPosition) + 2
           };
 
         case Action.A1_12:
@@ -769,7 +771,9 @@ export class Lexer {
             lexeme: '>',
             line: startLine,
             column: startColumn,
-            position: startPosition
+            position: startPosition,
+            length: 1,
+            fullLength: (startPosition - initialPosition) + 1
           };
 
         // String actions
@@ -792,7 +796,9 @@ export class Lexer {
               lexeme: this.lexeme,
               line: startLine,
               column: startColumn,
-              position: startPosition
+              position: startPosition,
+              length: this.lexeme.length + 2, // +2 for quotes
+              fullLength: (startPosition - initialPosition) + (this.lexeme.length + 2)
             };
           } else {
             this.errors.push({
@@ -831,7 +837,9 @@ export class Lexer {
                 lexeme: this.lexeme,
                 line: startLine,
                 column: startColumn,
-                position: startPosition
+                position: startPosition,
+                length: this.lexeme.length,
+                fullLength: (startPosition - initialPosition) + this.lexeme.length
               };
             }
 
@@ -889,6 +897,8 @@ export class Lexer {
               line: startLine,
               column: startColumn,
               position: startPosition,
+              length: this.lexeme.length,
+              fullLength: (startPosition - initialPosition) + this.lexeme.length,
               symbol: symbol
             };
           } else {
@@ -923,7 +933,9 @@ export class Lexer {
               lexeme: this.numValue.toString(),
               line: startLine,
               column: startColumn,
-              position: startPosition
+              position: startPosition,
+              length: this.numValue.toString().length,
+              fullLength: (startPosition - initialPosition) + this.numValue.toString().length
             };
             this.outOfBounds = false;
             return result;
@@ -947,7 +959,9 @@ export class Lexer {
             lexeme: '^',
             line: startLine,
             column: startColumn,
-            position: startPosition
+            position: startPosition,
+            length: 1,
+            fullLength: (startPosition - initialPosition) + 1
           };
 
         case Action.A5_52:
@@ -956,7 +970,9 @@ export class Lexer {
             lexeme: '*',
             line: startLine,
             column: startColumn,
-            position: startPosition
+            position: startPosition,
+            length: 1,
+            fullLength: (startPosition - initialPosition) + 1
           };
 
         // Less than actions
@@ -966,7 +982,9 @@ export class Lexer {
             lexeme: '<',
             line: startLine,
             column: startColumn,
-            position: startPosition
+            position: startPosition,
+            length: 1,
+            fullLength: (startPosition - initialPosition) + 1
           };
 
         case Action.A7_72:
@@ -976,7 +994,9 @@ export class Lexer {
             lexeme: '<>',
             line: startLine,
             column: startColumn,
-            position: startPosition
+            position: startPosition,
+            length: 2,
+            fullLength: (startPosition - initialPosition) + 2
           };
 
         case Action.A7_73:
@@ -986,7 +1006,9 @@ export class Lexer {
             lexeme: '<=',
             line: startLine,
             column: startColumn,
-            position: startPosition
+            position: startPosition,
+            length: 2,
+            fullLength: (startPosition - initialPosition) + 2
           };
 
         // Colon actions
@@ -996,7 +1018,9 @@ export class Lexer {
             lexeme: ':',
             line: startLine,
             column: startColumn,
-            position: startPosition
+            position: startPosition,
+            length: 1,
+            fullLength: (startPosition - initialPosition) + 1
           };
 
         case Action.A8_82:
@@ -1006,7 +1030,9 @@ export class Lexer {
             lexeme: ':=',
             line: startLine,
             column: startColumn,
-            position: startPosition
+            position: startPosition,
+            length: 2,
+            fullLength: (startPosition - initialPosition) + 2
           };
 
         // Single character tokens
@@ -1021,7 +1047,9 @@ export class Lexer {
             lexeme: '+',
             line: startLine,
             column: startColumn,
-            position: startPosition
+            position: startPosition,
+            length: 1,
+            fullLength: (startPosition - initialPosition) + 1
           };
 
         case Action.A0_101:
@@ -1031,7 +1059,9 @@ export class Lexer {
             lexeme: '-',
             line: startLine,
             column: startColumn,
-            position: startPosition
+            position: startPosition,
+            length: 1,
+            fullLength: (startPosition - initialPosition) + 1
           };
 
         case Action.A0_102:
@@ -1041,7 +1071,9 @@ export class Lexer {
             lexeme: '/',
             line: startLine,
             column: startColumn,
-            position: startPosition
+            position: startPosition,
+            length: 1,
+            fullLength: (startPosition - initialPosition) + 1
           };
 
         case Action.A0_103:
@@ -1051,7 +1083,9 @@ export class Lexer {
             lexeme: '=',
             line: startLine,
             column: startColumn,
-            position: startPosition
+            position: startPosition,
+            length: 1,
+            fullLength: (startPosition - initialPosition) + 1
           };
 
         case Action.A0_104:
@@ -1061,7 +1095,9 @@ export class Lexer {
             lexeme: '(',
             line: startLine,
             column: startColumn,
-            position: startPosition
+            position: startPosition,
+            length: 1,
+            fullLength: (startPosition - initialPosition) + 1
           };
 
         case Action.A0_105:
@@ -1071,7 +1107,9 @@ export class Lexer {
             lexeme: ')',
             line: startLine,
             column: startColumn,
-            position: startPosition
+            position: startPosition,
+            length: 1,
+            fullLength: (startPosition - initialPosition) + 1
           };
 
         case Action.A0_106:
@@ -1081,7 +1119,9 @@ export class Lexer {
             lexeme: ';',
             line: startLine,
             column: startColumn,
-            position: startPosition
+            position: startPosition,
+            length: 1,
+            fullLength: (startPosition - initialPosition) + 1
           };
 
         case Action.A0_107:
@@ -1091,7 +1131,9 @@ export class Lexer {
             lexeme: ',',
             line: startLine,
             column: startColumn,
-            position: startPosition
+            position: startPosition,
+            length: 1,
+            fullLength: (startPosition - initialPosition) + 1
           };
 
         case Action.A0_108:
@@ -1100,7 +1142,9 @@ export class Lexer {
             lexeme: '',
             line: this.line,
             column: this.column,
-            position: this.position
+            position: this.position,
+            length: 0,
+            fullLength: (this.position - initialPosition) + 0
           };
 
         // Error actions
