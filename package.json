@@ -2,7 +2,7 @@
   "name": "boreal-lang",
   "displayName": "Boreal Lang",
   "description": "Adds syntax highlighting support for UPM's ETSIINF's Boreal language used in the \"Traductores de Lenguajes\" subject.",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "publisher": "oxixes",
   "repository": {
     "type": "git",
