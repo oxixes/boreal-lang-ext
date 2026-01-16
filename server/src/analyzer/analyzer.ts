@@ -2,6 +2,7 @@ import { Lexer } from './lexer';
 import { Parser } from './parser';
 import { SymbolTable } from './symbolTable';
 import { ASTNode } from '../types/ast';
+import { TokenType } from '../types/token';
 import { LexicalError } from '../types/token';
 import { SemanticError } from '../types/symbol';
 import { SyntaxError } from '../types/ast';
@@ -46,9 +47,6 @@ export class IntegratedAnalyzer {
     semanticWarnings: SemanticError[];
     symbolTable: SymbolTable;
   } {
-    // Set lexer to work with symbol table
-    this.lexer.setSymbolTable(this.symbolTable);
-
     // Parse - this will call lexer incrementally
     // Semantic actions execute during parsing to perform type checking
     const ast = this.parser.parse();
@@ -74,12 +72,48 @@ export class IntegratedAnalyzer {
       symbolTable: this.symbolTable
     };
   }
-}
 
-/**
- * Helper function to create and run a complete analysis
- */
-export function analyzeBoreal(input: string) {
-  const analyzer = new IntegratedAnalyzer(input);
-  return analyzer.analyze();
+  /**
+   * Find the definition location for a symbol at the given position
+   *
+   * @param position The cursor position
+   * @returns Symbol information, or undefined if not found
+   */
+  public findSymbolDefinition(line: number, column: number): { position: number; line: number; column: number; length: number } | undefined {
+    // Set lexer to stop at the given position
+    this.lexer.setStopAt(line, column);
+
+    // Parse - this will call lexer incrementally
+    // Semantic actions execute during parsing to perform type checking
+    const ast = this.parser.parse();
+
+    // Check for lexical or syntax errors
+    if (this.lexer.errors.length > 0 || this.parser.errors.length > 0) {
+      return undefined;
+    }
+
+    // Get the last token processed by the lexer
+    const lastToken = this.lexer.getLastToken();
+    if (!lastToken || lastToken.type !== TokenType.IDENTIFIER) {
+      return undefined;
+    }
+
+    // Lookup the symbol in the symbol table
+    const symbol = this.symbolTable.lookup(lastToken.lexeme);
+    if (!symbol) {
+      return undefined;
+    }
+
+    // Return symbol position information
+    if (symbol.position === undefined || symbol.line === undefined || symbol.column === undefined) {
+      return undefined;
+    }
+
+    return {
+      position: symbol.position,
+      line: symbol.line,
+      column: symbol.column,
+      length: symbol.length || lastToken.lexeme.length
+    };
+  }
 }

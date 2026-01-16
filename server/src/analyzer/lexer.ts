@@ -143,6 +143,12 @@ export class Lexer {
   private symbolTable: SymbolTable | null = null;
   private declarationZone: boolean = false;
 
+  // Stop at variables
+  private stopAtLine: number | null = null;
+  private stopAtColumn: number | null = null;
+
+  private lastToken: Token | null = null;
+
   constructor(input: string, symbolTable?: SymbolTable) {
     this.input = input;
     this.position = -1;
@@ -177,6 +183,14 @@ export class Lexer {
    */
   public isInDeclarationZone(): boolean {
     return this.declarationZone;
+  }
+
+  /**
+   * Set stop at position for variable analysis (for go-to-definition)
+   */
+  public setStopAt(line: number, column: number): void {
+    this.stopAtLine = line;
+    this.stopAtColumn = column;
   }
 
   /**
@@ -686,7 +700,7 @@ export class Lexer {
   /**
    * Generate the next token using the state machine
    */
-  public getNextToken(): Token | null {
+  private getNextTokenInternal(): Token | null {
     let state = 0;
     let prevState = 0;
     this.lexeme = '';
@@ -842,7 +856,11 @@ export class Lexer {
                   const newSymbol: BorealSymbol = {
                     name: upperLexeme,
                     kind: SymbolKind.UNKNOWN,
-                    scope: this.symbolTable.getCurrentScopeName()
+                    scope: this.symbolTable.getCurrentScopeName(),
+                    position: startPosition,
+                    line: startLine,
+                    column: startColumn,
+                    length: this.idCount
                   };
                   this.symbolTable.define(newSymbol);
                   symbol = newSymbol;
@@ -1143,6 +1161,27 @@ export class Lexer {
     }
 
     return null;
+  }
+
+  /**
+   * Gets the next token from the input
+   */
+  public getNextToken(): Token | null {
+    this.lastToken = this.getNextTokenInternal();
+    if (this.stopAtLine != null && this.stopAtColumn != null) {
+      if (this.line > this.stopAtLine || (this.line === this.stopAtLine && this.column > this.stopAtColumn)) {
+        return null;
+      }
+    }
+
+    return this.lastToken;
+  }
+
+  /**
+   * Get last token read (for gathering information)
+   */
+  public getLastToken(): Token | null {
+    return this.lastToken;
   }
 
   /**

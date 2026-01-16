@@ -40,6 +40,12 @@ export interface Symbol {
   byReference?: boolean; // For parameters
 
   label?: string; // For code generation (procedure/function labels)
+
+  // Position information for go-to-definition
+  position?: number; // Absolute position in source
+  line?: number; // Line number (1-based)
+  column?: number; // Column number (0-based)
+  length?: number; // Length of the symbol name
 }
 
 /**

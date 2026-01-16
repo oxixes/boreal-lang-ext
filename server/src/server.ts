@@ -7,12 +7,13 @@ import {
   InitializeResult,
   Diagnostic,
   DiagnosticSeverity,
-  CompletionItem,
-  CompletionItemKind
+  DefinitionParams,
+  Location
 } from 'vscode-languageserver/node';
 
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { IntegratedAnalyzer } from './analyzer/analyzer';
+import { DefinitionProvider } from './analyzer/definitionProvider';
 
 // Create a connection for the server
 const connection = createConnection(ProposedFeatures.all);
@@ -38,7 +39,8 @@ connection.onInitialize((params: InitializeParams) => {
 
   const result: InitializeResult = {
     capabilities: {
-      textDocumentSync: TextDocumentSyncKind.Incremental
+      textDocumentSync: TextDocumentSyncKind.Incremental,
+      definitionProvider: true
     }
   };
 
@@ -164,6 +166,29 @@ documents.onDidChangeContent(change => {
 documents.onDidOpen(event => {
   connection.console.log(`Document opened: ${event.document.uri}`);
   validateDocument(event.document);
+});
+
+// Handle go to definition requests
+connection.onDefinition((params: DefinitionParams): Location | undefined => {
+  const document = documents.get(params.textDocument.uri);
+  if (!document) {
+    return undefined;
+  }
+
+  connection.console.log(`Definition request at ${params.position.line}:${params.position.character}`);
+
+  try {
+    const location = DefinitionProvider.findDefinition(document, params.position);
+    if (location) {
+      connection.console.log(`Found definition at ${location.range.start.line}:${location.range.start.character}`);
+    } else {
+      connection.console.log('No definition found');
+    }
+    return location;
+  } catch (error) {
+    connection.console.error(`Error finding definition: ${error}`);
+    return undefined;
+  }
 });
 
 // Make the text document manager listen on the connection
