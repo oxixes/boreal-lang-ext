@@ -292,7 +292,7 @@ export class SemanticActions {
     private acc11(stack: Attributes[]): Attributes {
         const bloqueAtb = this.getAttribute(stack, 3);
         if (bloqueAtb.type === "type_error")
-            this.addError("Error detected in the development of the Procedure body", 0, bloqueAtb.line || 0, bloqueAtb.column || 0, bloqueAtb.llength || 0);
+            this.addError("Error detected in the procedure body", 0, bloqueAtb.line || 0, bloqueAtb.column || 0, bloqueAtb.llength || 0);
         if (bloqueAtb.ret !== "" && bloqueAtb.ret !== "type_ok") {
             const pos = bloqueAtb.retPosition || 0;
             const line = bloqueAtb.retLine || 0;
@@ -581,7 +581,7 @@ export class SemanticActions {
             const col = cAtb.retColumn || bAtb.retColumn || 0;
             const len = cAtb.retLength || bAtb.retLength || 0;
             const pos = cAtb.retPosition || bAtb.retPosition || 0;
-            this.addError("Return types of different types in a subprogram", pos, line, col, len);
+            this.addError("Return types of different types in subprogram", pos, line, col, len);
 
             res.retLine = line;
             res.retColumn = col;
@@ -701,7 +701,7 @@ export class SemanticActions {
             const line = thenAtb.retLine || bloqueAtb.retLine || 0;
             const col = thenAtb.retColumn || bloqueAtb.retColumn || 0;
             const len = thenAtb.retLength || bloqueAtb.retLength || 0;
-            this.addError("Instrucciones de retorno de diferentes tipos en sentencia condicional compuesta", pos, line, col, len);
+            this.addError("Return instructions of different types in compound conditional statement", pos, line, col, len);
 
             res.retLine = line;
             res.retColumn = col;
@@ -865,7 +865,7 @@ export class SemanticActions {
              const len = nATB.retLength || oATB.retLength || 0;
 
              if (nATB.ret !== "type_error" && oATB.ret !== "type_error")
-                this.addError("Tipos de retorno incompatibles en case", pos, line, col, len);
+                this.addError("Incompatible return types in case", pos, line, col, len);
 
              res.retLine = line;
              res.retColumn = col;
@@ -890,7 +890,7 @@ export class SemanticActions {
         if (nATB.type === "type_ok") res.type = bloqueATB.type;
         else {
              if (nATB.type !== "type_error") {
-                 this.addErrorFromAttr("Error en case", nATB);
+                 this.addErrorFromAttr("Error in case", nATB);
              }
              res.type = "type_error";
         }
@@ -921,7 +921,7 @@ export class SemanticActions {
             const len = nATB.retLength || bloqueATB.retLength || 0;
 
             if (nATB.ret !== "type_error" && bloqueATB.ret !== "type_error")
-                this.addError("Tipos de retorno incompatibles en case", pos, line, col, len);
+                this.addError("Incompatible return types in case", pos, line, col, len);
 
             res.retLine = line;
             res.retColumn = col;
@@ -1061,12 +1061,12 @@ export class SemanticActions {
                                             params[i].dataType === DataType.BOOLEAN ? "logical" :
                                             params[i].dataType === DataType.STRING ? "string" : "desconocido";
                          if (llAtributos[i] !== expectedType && llAtributos[i] !== "type_error") {
-                             errors.push(`parámetro ${i + 1}: esperado ${expectedType}, recibido ${llAtributos[i]}`);
+                             errors.push(`parameter ${i + 1}: expected ${expectedType}, received ${llAtributos[i]}`);
                              allMatch = false;
                          }
                      }
                      if (!allMatch) {
-                         this.addErrorFromAttr(`Tipos de parámetros incompatibles: ${errors.join("; ")}`, idATB);
+                         this.addErrorFromAttr(`Incompatible parameter types: ${errors.join("; ")}`, idATB);
                          res.type = "type_error";
                      } else {
                          res.type = "type_ok";
@@ -1260,7 +1260,7 @@ export class SemanticActions {
                 if (i.type !== h.type) {
                     this.addErrorFromAttr(`Incompatible types for +: left operand ${h.type}, right operand ${i.type}`, h);
                 } else if (i.type !== "integer" && i.type !== "string") {
-                    this.addErrorFromAttr(`Tipo incompatible para +: esperado entero o cadena, recibido ${i.type}`, i);
+                    this.addErrorFromAttr(`Incompatible type for +: expected integer or string, received ${i.type}`, i);
                 }
             }
             res.type = "type_error";
@@ -1329,19 +1329,57 @@ export class SemanticActions {
         const sym = idAtb.symbol;
         if (!sym) { res.type="type_error"; return res; }
 
+        const llAtributos = llAtb.type ? llAtb.type.split(/\s+/) : [];
+        const argCount = llAtb.length || 0;
+
         if (sym.kind === SymbolKind.FUNCTION) {
-             // check params
-             let t = sym.returnType === DataType.INTEGER ? "integer" :
-                     (sym.returnType === DataType.BOOLEAN ? "logical" : "string");
-             res.type = t;
+            const params = sym.parameters || [];
+            if (argCount !== params.length) {
+                this.addErrorFromAttr(`Incorrect number of arguments: expected ${params.length}, received ${argCount}`, idAtb);
+                res.type = "type_error";
+            } else {
+                let typeError = false;
+                for (let i = 0; i < params.length; i++) {
+                    const expectedType = params[i].dataType === DataType.INTEGER ? "integer" :
+                                       params[i].dataType === DataType.BOOLEAN ? "logical" :
+                                       params[i].dataType === DataType.STRING ? "string" : "unknown";
+                    if (llAtributos[i] !== expectedType) {
+                        this.addErrorFromAttr(`Argument ${i+1} type mismatch: expected ${expectedType}, received ${llAtributos[i]}`, idAtb);
+                        typeError = true;
+                    }
+                }
+                if (typeError) {
+                    res.type = "type_error";
+                } else {
+                    res.type = sym.returnType === DataType.INTEGER ? "integer" :
+                              sym.returnType === DataType.BOOLEAN ? "logical" : "string";
+                }
+            }
         } else if (sym.kind === SymbolKind.PROCEDURE) {
-             this.addErrorFromAttr("A procedure returns nothing", idAtb);
-             res.type = "type_error";
+            const params = sym.parameters || [];
+            if (argCount !== params.length) {
+                this.addErrorFromAttr(`Incorrect number of arguments for procedure: expected ${params.length}, received ${argCount}`, idAtb);
+            } else if (params.length > 0) {
+                for (let i = 0; i < params.length; i++) {
+                    const expectedType = params[i].dataType === DataType.INTEGER ? "integer" :
+                                       params[i].dataType === DataType.BOOLEAN ? "logical" :
+                                       params[i].dataType === DataType.STRING ? "string" : "unknown";
+                    if (llAtributos[i] !== expectedType) {
+                        this.addErrorFromAttr(`Argument ${i+1} type mismatch for procedure: expected ${expectedType}, received ${llAtributos[i]}`, idAtb);
+                    }
+                }
+            }
+            this.addErrorFromAttr("A procedure returns nothing", idAtb);
+            res.type = "type_error";
         } else {
-             // variable
-             if (sym.dataType === DataType.INTEGER) res.type = "integer";
-             else if (sym.dataType === DataType.BOOLEAN) res.type = "logical";
-             else res.type = "string";
+            // variable
+            if (argCount > 0) {
+                this.addErrorFromAttr("Variables do not take arguments", idAtb);
+                res.type = "type_error";
+            } else {
+                res.type = sym.dataType === DataType.INTEGER ? "integer" :
+                          sym.dataType === DataType.BOOLEAN ? "logical" : "string";
+            }
         }
         return res;
     }
