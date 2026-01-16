@@ -4,7 +4,7 @@ import { SymbolTable } from './symbolTable';
 import { ASTNode } from '../types/ast';
 import { TokenType } from '../types/token';
 import { LexicalError } from '../types/token';
-import { SemanticError, SemanticToken } from '../types/symbol';
+import { SemanticError, SemanticToken, Symbol } from '../types/symbol';
 import { SyntaxError } from '../types/ast';
 
 /**
@@ -23,7 +23,7 @@ import { SyntaxError } from '../types/ast';
 export class IntegratedAnalyzer {
   private lexer: Lexer;
   private parser: Parser;
-  private symbolTable: SymbolTable;
+  public symbolTable: SymbolTable;
 
   constructor(input: string) {
     // Create symbol table
@@ -85,12 +85,41 @@ export class IntegratedAnalyzer {
    * @returns Symbol information, or undefined if not found
    */
   public findSymbolDefinition(line: number, column: number): { position: number; line: number; column: number; length: number } | undefined {
+    const lexeme = this.getSymbolLexemeAtPosition(line, column);
+    if (!lexeme) {
+      return undefined;
+    }
+
+    const symbol = this.symbolTable.lookup(lexeme);
+    if (!symbol) {
+      return undefined;
+    }
+
+    if (symbol.position === undefined || symbol.line === undefined || symbol.column === undefined || symbol.length === undefined) {
+      return undefined;
+    }
+
+    return {
+      position: symbol.position,
+      line: symbol.line,
+      column: symbol.column,
+      length: symbol.length
+    };
+  }
+
+  /**
+   * Get the symbol at the given position
+   *
+   * @param line The line number (0-based)
+   * @param column The column number (0-based)
+   * @returns The symbol lexeme, or undefined if not found
+   */
+  public getSymbolLexemeAtPosition(line: number, column: number): string | undefined {
     // Set lexer to stop at the given position
     this.lexer.setStopAt(line, column);
 
     // Parse - this will call lexer incrementally
-    // Semantic actions execute during parsing to perform type checking
-    const ast = this.parser.parse();
+    this.parser.parse();
 
     // Check for lexical or syntax errors
     if (this.lexer.errors.length > 0 || this.parser.errors.length > 0) {
@@ -104,21 +133,6 @@ export class IntegratedAnalyzer {
     }
 
     // Lookup the symbol in the symbol table
-    const symbol = this.symbolTable.lookup(lastToken.lexeme);
-    if (!symbol) {
-      return undefined;
-    }
-
-    // Return symbol position information
-    if (symbol.position === undefined || symbol.line === undefined || symbol.column === undefined) {
-      return undefined;
-    }
-
-    return {
-      position: symbol.position,
-      line: symbol.line,
-      column: symbol.column,
-      length: symbol.length || lastToken.lexeme.length
-    };
+    return lastToken.lexeme;
   }
 }

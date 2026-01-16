@@ -267,7 +267,7 @@ export class SemanticActions {
     private acc8(stack: Attributes[]): Attributes {
         const pidAtb = this.getAttribute(stack, 1);
         if (pidAtb.symbol) {
-            pidAtb.symbol.kind = SymbolKind.PROGRAM; // Using PROGRAM/PROCEDURE
+            pidAtb.symbol.kind = SymbolKind.PROGRAM; // Using PROGRAM
             pidAtb.symbol.parameters = []; // numParametro 0
             pidAtb.symbol.label = "main";
 
@@ -344,14 +344,15 @@ export class SemanticActions {
 
             const params: Parameter[] = [];
             if ((aAtb.length || 0) > 0) {
-                const tipos = aAtb.type ? aAtb.type.split(" ") : [];
-                const modos = aAtb.ref ? aAtb.ref.split(" ") : [];
+                const names = aAtb.names ? aAtb.names.split(" ") : [];
+                const types = aAtb.type ? aAtb.type.split(" ") : [];
+                const modes = aAtb.ref ? aAtb.ref.split(" ") : [];
 
-                for (let i = 0; i < tipos.length; i++) {
+                for (let i = 0; i < types.length; i++) {
                     params.push({
-                        name: 'param'+i,
-                        dataType: this.stringToDataType(tipos[i]),
-                        byReference: modos[i] === 'referencia'
+                        name: names[i] || 'param'+i,
+                        dataType: this.stringToDataType(types[i]),
+                        byReference: modes[i] === 'referencia'
                     });
                 }
             }
@@ -410,14 +411,15 @@ export class SemanticActions {
 
             const params: Parameter[] = [];
             if ((aAtb.length || 0) > 0) {
-                const tipos = aAtb.type ? aAtb.type.split(" ") : [];
-                const modos = aAtb.ref ? aAtb.ref.split(" ") : [];
+                const names = aAtb.names ? aAtb.names.split(" ") : [];
+                const types = aAtb.type ? aAtb.type.split(" ") : [];
+                const modes = aAtb.ref ? aAtb.ref.split(" ") : [];
 
-                for (let i = 0; i < tipos.length; i++) {
+                for (let i = 0; i < types.length; i++) {
                     params.push({
-                        name: 'param'+i,
-                        dataType: this.stringToDataType(tipos[i]),
-                        byReference: modos[i] === 'referencia'
+                        name: names[i] || 'param'+i,
+                        dataType: this.stringToDataType(types[i]),
+                        byReference: modes[i] === 'referencia'
                     });
                 }
             }
@@ -435,6 +437,7 @@ export class SemanticActions {
         const tAtb = this.getAttribute(stack, 5);
 
         if (idAtb.symbol) {
+            idAtb.symbol.kind = SymbolKind.VARIABLE;
             idAtb.symbol.dataType = this.stringToDataType(tAtb.type || "");
 
             if (this.isGlobalScope) {
@@ -489,6 +492,7 @@ export class SemanticActions {
 
         const typeStr = tAtb.type || "";
         if (idAtb.symbol) {
+            idAtb.symbol.kind = SymbolKind.VARIABLE;
             idAtb.symbol.dataType = this.stringToDataType(typeStr);
             idAtb.symbol.offset = this.localDisplacement;
 
@@ -501,6 +505,8 @@ export class SemanticActions {
                 res.ref = "value" + (aaAtb.ref ? " " + aaAtb.ref : "");
                 this.localDisplacement += (tAtb.size || 0);
             }
+
+            res.names = idAtb.symbol.originalLexeme + (aaAtb.names ? " " + aaAtb.names : "");
 
             // Update semantic token
             if (idAtb.line && idAtb.column) {
@@ -534,6 +540,7 @@ export class SemanticActions {
 
         const typeStr = tAtb.type || "";
         if (idAtb.symbol) {
+            idAtb.symbol.kind = SymbolKind.VARIABLE;
             idAtb.symbol.dataType = this.stringToDataType(typeStr);
             idAtb.symbol.offset = this.localDisplacement;
 
@@ -546,6 +553,8 @@ export class SemanticActions {
                 res.ref = "value" + (aaAtb.ref ? " " + aaAtb.ref : "");
                 this.localDisplacement += (tAtb.size || 0);
             }
+
+            res.names = idAtb.symbol.originalLexeme;
 
             // Update semantic token
             if (idAtb.line && idAtb.column) {

@@ -27,6 +27,7 @@ export enum DataType {
  */
 export interface Symbol {
   name: string;
+  originalLexeme: string; // Original lexeme as in source code
   kind: SymbolKind;
   dataType?: DataType;
   scope: string;

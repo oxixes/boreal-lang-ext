@@ -855,6 +855,7 @@ export class Lexer {
                   // Insert new symbol with UNKNOWN type (will be set by semantic analyzer)
                   const newSymbol: BorealSymbol = {
                     name: upperLexeme,
+                    originalLexeme: this.lexeme,
                     kind: SymbolKind.UNKNOWN,
                     scope: this.symbolTable.getCurrentScopeName(),
                     position: startPosition,

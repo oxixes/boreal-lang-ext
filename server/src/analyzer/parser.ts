@@ -44,6 +44,7 @@ export class Attributes {
   size?: number;     // Width/size
   length?: number;   // Length
   ref?: string;      // Reference
+  names?: string;    // Names
   label?: string;    // Label
   program_count?: number; // Program counter
 

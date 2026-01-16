@@ -10,13 +10,15 @@ import {
   DefinitionParams,
   Location,
   SemanticTokens,
-  SemanticTokensParams
+  SemanticTokensParams,
+  HoverParams,
+  Hover
 } from 'vscode-languageserver/node';
 
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { IntegratedAnalyzer } from './analyzer/analyzer';
 import { DefinitionProvider } from './analyzer/definitionProvider';
-import { SemanticToken } from './types/symbol';
+import { SymbolKind } from './types/symbol';
 
 // Create a connection for the server
 const connection = createConnection(ProposedFeatures.all);
@@ -46,6 +48,7 @@ connection.onInitialize((params: InitializeParams) => {
     capabilities: {
       textDocumentSync: TextDocumentSyncKind.Incremental,
       definitionProvider: true,
+      hoverProvider: true,
       semanticTokensProvider: {
         legend: {
           tokenTypes: ['variable', 'function'],
@@ -202,6 +205,57 @@ connection.onDefinition((params: DefinitionParams): Location | undefined => {
     return location;
   } catch (error) {
     connection.console.error(`Error finding definition: ${error}`);
+    return undefined;
+  }
+});
+
+// Handle hover requests
+connection.onHover((params: HoverParams): Hover | undefined => {
+  const document = documents.get(params.textDocument.uri);
+  if (!document) {
+    return undefined;
+  }
+
+  connection.console.log(`Hover request at ${params.position.line}:${params.position.character}`);
+
+  try {
+    const text = document.getText();
+    let analyzer = new IntegratedAnalyzer(text);
+
+    const lexeme = analyzer.getSymbolLexemeAtPosition(params.position.line + 1, params.position.character);
+    if (!lexeme) {
+      return undefined;
+    }
+
+    const symbol = analyzer.symbolTable.lookup(lexeme);
+    if (!symbol) {
+      return undefined;
+    }
+
+    let content = '';
+    if (symbol.kind === SymbolKind.VARIABLE) {
+      content = `var ${symbol.originalLexeme}: ${symbol.dataType || 'unknown'}`;
+    } else if (symbol.kind === SymbolKind.FUNCTION) {
+      const paramsStr = symbol.parameters ? symbol.parameters.map(p => `${p.byReference ? 'ref ' : ''}${p.name}: ${p.dataType}`).join('; ') : '';
+      content = `function ${symbol.originalLexeme}(${paramsStr}): ${symbol.returnType || 'void'}`;
+    } else if (symbol.kind === SymbolKind.PROCEDURE) {
+      const paramsStr = symbol.parameters ? symbol.parameters.map(p => `${p.byReference ? 'ref ' : ''}${p.name}: ${p.dataType}`).join('; ') : '';
+      content = `procedure ${symbol.originalLexeme}(${paramsStr})`;
+    } else if (symbol.kind === SymbolKind.PROGRAM) {
+      const paramsStr = symbol.parameters ? symbol.parameters.map(p => `${p.byReference ? 'ref ' : ''}${p.name}: ${p.dataType}`).join('; ') : '';
+      content = `program ${symbol.originalLexeme}(${paramsStr})`;
+    } else {
+      return undefined;
+    }
+
+    return {
+      contents: {
+        language: 'boreal',
+        value: content
+      }
+    };
+  } catch (error) {
+    connection.console.error(`Error in hover: ${error}`);
     return undefined;
   }
 });
