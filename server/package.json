@@ -1,0 +1,10 @@
+{
+  "name": "boreal-lang-server",
+  "version": "0.0.3",
+  "description": "Language server for Boreal programming language",
+  "main": "../out/server/server.js",
+  "dependencies": {
+    "vscode-languageserver": "^9.0.1",
+    "vscode-languageserver-textdocument": "^1.0.11"
+  }
+}

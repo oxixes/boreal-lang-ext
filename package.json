@@ -14,6 +14,27 @@
   "categories": [
     "Programming Languages"
   ],
+  "main": "./out/client/src/extension.js",
+  "activationEvents": [
+    "onLanguage:boreal"
+  ],
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -b",
+    "watch": "tsc -b -w",
+    "pretest": "npm run compile",
+    "postinstall": "cd client && npm install && cd ../server && npm install && cd .."
+  },
+  "dependencies": {
+    "vscode-languageclient": "^9.0.1",
+    "vscode-languageserver": "^9.0.1",
+    "vscode-languageserver-textdocument": "^1.0.11"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.102.0",
+    "typescript": "^5.3.0"
+  },
   "contributes": {
     "languages": [{
       "id": "boreal",

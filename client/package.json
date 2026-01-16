@@ -1,0 +1,9 @@
+{
+  "name": "boreal-lang-client",
+  "version": "0.0.3",
+  "description": "VS Code extension client for Boreal language",
+  "main": "../out/client/extension.js",
+  "dependencies": {
+    "vscode-languageclient": "^9.0.1"
+  }
+}
