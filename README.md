@@ -4,6 +4,8 @@ This extension provides syntax highlighting support for the Boreal programming l
 
 Boreal is a language used in the subject 'Traductores de Lenguajes' at the Universidad Politecnica de Madrid, designed to help students learn about language translation and compiler construction.
 
+While the subject mentions that source code is in the .txt extension, this extension uses the .boreal (or .bor) extension for better identification and usability. If you use .txt files, you can manually set the language to Boreal in VS Code (down right corner).
+
 > [!NOTE]
 > Esta extensión ayuda a la realización de la práctica de la asignatura 'Traductores de Lenguajes' de la Universidad Politécnica de Madrid. No es un proyecto oficial ni está afiliado a la universidad. Puede contener errores y limitaciones (en cuyo caso agradecería que me los reportaseis).
 
