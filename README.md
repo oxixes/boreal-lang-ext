@@ -10,7 +10,7 @@ While the subject mentions that source code is in the .txt extension, this exten
 > Esta extensión ayuda a la realización de la práctica de la asignatura 'Traductores de Lenguajes' de la Universidad Politécnica de Madrid. No es un proyecto oficial ni está afiliado a la universidad. Puede contener errores y limitaciones (en cuyo caso agradecería que me los reportaseis).
 
 > [!NOTE]
-> Esta extensión implementa un procesador de lenguaje completo siguiendo las pautas de la asignatura 'Procesadores de Lenguajes', lo que puede resultar útil como implementación de referencia. Sin embargo, NO es el mismo lenguaje que en Traductores de Lenguajes, y puedes tener diferentes opciones de práctica. Esta en concreto está implementada con un analizador sintáctico ascendente (LR) e implementa todas las características del lenguaje Boreal según las especificaciones de la asignatura.
+> Esta extensión implementa un procesador de lenguaje completo siguiendo las pautas de la asignatura 'Procesadores de Lenguajes', lo que puede resultar útil como implementación de referencia. Sin embargo, NO es el mismo lenguaje que en Procesadores de Lenguajes, y puedes tener diferentes opciones de práctica. Esta en concreto está implementada con un analizador sintáctico ascendente (LR) e implementa todas las características del lenguaje Boreal según las especificaciones de la asignatura.
 
 ## Features
 
